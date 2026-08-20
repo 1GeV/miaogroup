@@ -20,18 +20,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 22
+        node-version: 22
+
       - name: Install dependencies
         run: npm install
+
       - name: Build
         run: npm run build
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ./dist
+        path: ./dist
   deploy:
     needs: build
     runs-on: ubuntu-latest
