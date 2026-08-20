@@ -1,0 +1,37 @@
+---
+import '../styles/global.css';
+const { title = 'Miao Group', description = 'Miao Group academic calendar and seminar archive.' } = Astro.props;
+const pathname = Astro.url.pathname;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <title>{title} · Miao Group</title>
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="site-header">
+        <a class="wordmark" href={import.meta.env.BASE_URL} aria-label="Miao Group home">
+          <span class="wordmark-mark" aria-hidden="true">∿</span>
+          <span>Miao Group</span>
+        </a>
+        <nav aria-label="Main navigation">
+          <a class:list={{ active: pathname.includes('/calendar') }} href={`${import.meta.env.BASE_URL}calendar/`}>Academic calendar</a>
+          <a class:list={{ active: pathname.includes('/seminars') }} href={`${import.meta.env.BASE_URL}seminars/`}>Seminars</a>
+        </nav>
+      </header>
+      <main>
+        <slot />
+      </main>
+      <footer class="site-footer">
+        <span>Miao Group</span>
+        <span>Strings · Fields · Holography</span>
+        <span>Asia/Shanghai</span>
+      </footer>
+    </div>
+  </body>
+</html>
