@@ -77,3 +77,114 @@
   .marker-one { left: 66px; top: 122px; }
   .marker-two { left: 258px; top: 27px; }
 }
+
+/* The diagram uses a boundary-to-bulk network instead of orbital decoration. */
+.hero-diagram {
+  border-left: 0;
+}
+
+.diagram-field {
+  inset: 48px 18px 55px;
+}
+
+.diagram-boundary-line {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  top: 28px;
+  border-top: 1px solid #7195ae;
+}
+
+.boundary-label {
+  position: absolute;
+  top: 4px;
+  left: 28px;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.boundary-operators {
+  position: absolute;
+  left: 52px;
+  right: 52px;
+  top: 23px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.boundary-operators span,
+.network-node {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--teal);
+  border-radius: 50%;
+  background: var(--paper);
+}
+
+.bulk-network {
+  position: absolute;
+  left: 50px;
+  right: 50px;
+  top: 28px;
+  bottom: 6px;
+}
+
+.network-line {
+  position: absolute;
+  height: 1px;
+  background: #b2c8d5;
+  transform-origin: left center;
+}
+
+.line-a { width: 182px; left: 0; top: 0; transform: rotate(53deg); }
+.line-b { width: 174px; left: 0; top: 0; transform: rotate(28deg); }
+.line-c { width: 176px; right: 0; top: 0; transform-origin: right center; transform: rotate(-28deg); }
+.line-d { width: 184px; right: 0; top: 0; transform-origin: right center; transform: rotate(-53deg); }
+.line-e { width: 125px; left: 49px; top: 77px; transform: rotate(25deg); }
+.line-f { width: 125px; right: 49px; top: 77px; transform-origin: right center; transform: rotate(-25deg); }
+
+.network-node {
+  position: absolute;
+}
+
+.node-a { left: 46px; top: 73px; }
+.node-b { right: 46px; top: 73px; }
+.node-c { left: 94px; top: 126px; }
+.node-d { right: 94px; top: 126px; }
+
+.network-core {
+  position: absolute;
+  left: 50%;
+  top: 176px;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border: 1px solid var(--blue);
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  font-family: var(--serif);
+  font-size: 12px;
+  transform: translateX(-50%);
+}
+
+.formula-correspondence {
+  left: 20px;
+  top: 23px;
+}
+
+.diagram-caption {
+  right: 18px;
+  bottom: 24px;
+}
+
+@media (max-width: 760px) {
+  .diagram-field { inset: 36px 8px 48px; }
+  .bulk-network { left: 28px; right: 28px; }
+  .network-core { top: 143px; }
+  .formula-correspondence { left: 8px; top: 10px; }
+  .diagram-caption { right: 8px; bottom: 18px; }
+}

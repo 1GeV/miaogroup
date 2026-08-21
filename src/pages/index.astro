@@ -21,14 +21,25 @@ const typeLabel = (type: string) => type.replace('-', ' ');
       </div>
     </div>
     <div class="hero-diagram" aria-hidden="true">
-      <div class="diagram-label">AdS / CFT</div>
       <div class="diagram-field">
-        <div class="diagram-boundary"></div>
-        <div class="diagram-bulk"></div>
-        <div class="diagram-geodesic geodesic-one"></div>
-        <div class="diagram-geodesic geodesic-two"></div>
-        <span class="diagram-marker marker-one"></span>
-        <span class="diagram-marker marker-two"></span>
+        <div class="diagram-boundary-line"></div>
+        <div class="boundary-label">boundary</div>
+        <div class="boundary-operators">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <div class="bulk-network">
+          <span class="network-line line-a"></span>
+          <span class="network-line line-b"></span>
+          <span class="network-line line-c"></span>
+          <span class="network-line line-d"></span>
+          <span class="network-line line-e"></span>
+          <span class="network-line line-f"></span>
+          <span class="network-node node-a"></span>
+          <span class="network-node node-b"></span>
+          <span class="network-node node-c"></span>
+          <span class="network-node node-d"></span>
+          <span class="network-core">bulk</span>
+        </div>
       </div>
       <span class="formula formula-correspondence"><i>Z</i><sub>CFT</sub> = <i>Z</i><sub>AdS</sub></span>
       <span class="diagram-caption">boundary &harr; bulk</span>
