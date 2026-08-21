@@ -27,10 +27,10 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
 ---
 <Layout title="Academic calendar">
   <section class="page-intro"><p class="eyebrow">Plan the week</p><h1>Academic calendar</h1><p>Group meetings, lectures, seminars, defenses, and other shared moments.</p></section>
-  <section class="calendar-toolbar" aria-label="Calendar controls"><div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div><label class="calendar-control">Show <select id="range-filter"><option value="month">Current month</option><option value="all">All dates</option><option value="custom">Custom range</option></select></label><label class="calendar-control calendar-type-control">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label><button class="button button-outline" id="export-ical">Export iCal <span aria-hidden="true">↓</span></button></section>
+  <section class="calendar-toolbar" aria-label="Calendar controls"><div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div><label class="calendar-control">Show <select id="range-filter"><option value="month">Selected month</option><option value="all">All dates</option><option value="custom">Custom range</option></select></label><label class="calendar-control calendar-type-control">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label><button class="button button-outline" id="export-ical">Export iCal <span aria-hidden="true">↓</span></button></section>
   <div class="custom-range" id="custom-range" hidden><label>Start <input id="range-start" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="Start date, YYYY-MM-DD" /></label><span aria-hidden="true">to</span><label>End <input id="range-end" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="End date, YYYY-MM-DD" /></label></div>
   <div id="calendar-app" data-events={JSON.stringify(serialized)} data-labels={JSON.stringify(labels)}>
-    <div class="calendar-monthbar" id="calendar-monthbar"><button class="icon-button" id="previous-month" aria-label="Previous month">←</button><div class="month-picker"><div class="picker-control" id="month-control"><label><span class="sr-only">Search month</span><input id="month-picker" type="text" autocomplete="off" role="combobox" aria-controls="month-menu" aria-expanded="false" aria-label="Month" /></label><div class="picker-menu" id="month-menu" role="listbox" hidden></div></div><div class="picker-control" id="year-control"><label><span class="sr-only">Search year</span><input id="year-picker" type="text" inputmode="numeric" autocomplete="off" role="combobox" aria-controls="year-menu" aria-expanded="false" aria-label="Year" /></label><div class="picker-menu" id="year-menu" role="listbox" hidden></div></div></div><button class="icon-button" id="next-month" aria-label="Next month">→</button></div>
+    <div class="calendar-monthbar" id="calendar-monthbar"><div class="month-nav"><button class="icon-button" id="previous-month" aria-label="Previous month">←</button><div class="month-picker"><div class="picker-control" id="month-control"><label><span class="sr-only">Search month</span><input id="month-picker" type="text" autocomplete="off" role="combobox" aria-controls="month-menu" aria-expanded="false" aria-label="Month" /></label><div class="picker-menu" id="month-menu" role="listbox" hidden></div></div><div class="picker-control" id="year-control"><label><span class="sr-only">Search year</span><input id="year-picker" type="text" inputmode="numeric" autocomplete="off" role="combobox" aria-controls="year-menu" aria-expanded="false" aria-label="Year" /></label><div class="picker-menu" id="year-menu" role="listbox" hidden></div></div></div><button class="icon-button" id="next-month" aria-label="Next month">→</button></div><button class="month-today" id="today-month" type="button" hidden>Today</button></div>
     <div class="calendar-month-view" id="month-view"><div class="weekday-row">{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => <span>{day}</span>)}</div><div class="month-grid" id="month-grid"></div></div>
     <div class="calendar-list-view" id="list-view" hidden><div id="list-items"></div></div>
     <div class="calendar-empty" id="calendar-empty" hidden><span class="empty-index">01</span><h3>No activities match this view.</h3></div>
@@ -44,6 +44,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
       const parts = shanghaiParts(value);
       return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
     };
+    const today = eventDate(new Date().toISOString());
     const requestedEventId = new URLSearchParams(window.location.search).get('event');
     const requestedEvent = events.find((event) => event.id === requestedEventId);
     const baseDate = requestedEvent ? eventDate(requestedEvent.date) : new Date();
@@ -58,6 +59,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     const monthControl = document.querySelector('#month-control');
     const yearControl = document.querySelector('#year-control');
     const monthBar = document.querySelector('#calendar-monthbar');
+    const todayButton = document.querySelector('#today-month');
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const rangeStart = document.querySelector('#range-start');
     const rangeEnd = document.querySelector('#range-end');
@@ -127,13 +129,15 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
       monthPicker.dataset.selected = monthPicker.value;
       yearPicker.value = String(cursor.getFullYear());
       yearPicker.dataset.selected = yearPicker.value;
+      todayButton.hidden = cursor.getFullYear() === today.getFullYear() && cursor.getMonth() === today.getMonth();
       grid.innerHTML = '';
       const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
       const startOffset = (first.getDay() + 6) % 7;
       const days = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
       for (let index = 0; index < startOffset + days; index++) {
         const day = index - startOffset + 1;
-        const cell = document.createElement('div'); cell.className = 'day-cell';
+        const isToday = day === today.getDate() && cursor.getFullYear() === today.getFullYear() && cursor.getMonth() === today.getMonth();
+        const cell = document.createElement('div'); cell.className = `day-cell${isToday ? ' is-today' : ''}`;
         if (day > 0) { cell.innerHTML = `<span class="day-number">${day}</span>`; filtered.filter((event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth() && date.getDate() === day; }).forEach((event) => { const item = document.createElement('button'); item.type = 'button'; item.className = `calendar-event event-${event.type}`; item.setAttribute('aria-label', `View ${event.title} in list view`); item.innerHTML = `<span>${escapeHtml(labels[event.type])}</span><strong>${escapeHtml(event.title)}</strong>`; item.addEventListener('click', () => revealEvent(event.id)); cell.append(item); }); } else cell.classList.add('day-cell-empty');
         grid.append(cell);
       }
@@ -209,6 +213,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     rangeEnd.addEventListener('input', render);
     document.querySelector('#previous-month').addEventListener('click', () => { cursor.setMonth(cursor.getMonth() - 1); render(); });
     document.querySelector('#next-month').addEventListener('click', () => { cursor.setMonth(cursor.getMonth() + 1); render(); });
+    todayButton.addEventListener('click', () => { cursor = new Date(today.getFullYear(), today.getMonth(), 1); render(); });
     document.addEventListener('keydown', (event) => { if (monthBar.hidden || !['ArrowLeft', 'ArrowRight'].includes(event.key) || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement?.tagName)) return; event.preventDefault(); cursor.setMonth(cursor.getMonth() + (event.key === 'ArrowRight' ? 1 : -1)); render(); });
     document.querySelector('#export-ical').addEventListener('click', () => { const exportEvents = visibleEvents().filter(matchesRange); const body = exportEvents.map((event) => `BEGIN:VEVENT\nUID:${event.date}-${event.title.replace(/\s/g, '-')}@miaogroup\nDTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nDTSTART:${new Date(event.date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nSUMMARY:${event.title}\nDESCRIPTION:${event.description || ''}\nLOCATION:${event.location || ''}\nEND:VEVENT`).join('\n'); const blob = new Blob([`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Miao Group//Academic Calendar//EN\n${body}\nEND:VCALENDAR`], { type: 'text/calendar' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'miaogroup-calendar.ics'; link.click(); URL.revokeObjectURL(link.href); });
     render();
