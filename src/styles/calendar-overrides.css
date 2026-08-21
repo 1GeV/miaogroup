@@ -67,6 +67,10 @@
 .calendar-event { width:100%; border:0; color:inherit; cursor:pointer; font:inherit; text-align:left; }
 .month-grid { grid-template-columns:repeat(7, minmax(0, 1fr)); }
 .weekday-row > *, .day-cell { min-width:0; }
+.day-cell:nth-last-child(-n+7) { border-bottom:0; }
+.day-cell:nth-child(7n) { border-right:0; }
+.day-cell.is-last-row { border-bottom:1px solid var(--line); }
+.day-cell.is-last-column { border-right:1px solid var(--line); }
 .calendar-event { min-width:0; overflow-wrap:anywhere; }
 .calendar-event strong { white-space:normal; overflow-wrap:anywhere; word-break:break-word; }
 .calendar-event:hover { background:#e1edf3; }

@@ -174,11 +174,15 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
       const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
       const startOffset = (first.getDay() + 6) % 7;
       const days = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
-      for (let index = 0; index < startOffset + days; index++) {
+      const totalCells = Math.ceil((startOffset + days) / 7) * 7;
+      const lastRowStart = totalCells - 7;
+      for (let index = 0; index < totalCells; index++) {
         const day = index - startOffset + 1;
         const isToday = day === today.getDate() && cursor.getFullYear() === today.getFullYear() && cursor.getMonth() === today.getMonth();
-        const cell = document.createElement('div'); cell.className = `day-cell${isToday ? ' is-today' : ''}`;
-        if (day > 0) {
+        const isLastRow = index >= lastRowStart;
+        const isLastColumn = index % 7 === 6 || index === totalCells - 1;
+        const cell = document.createElement('div'); cell.className = `day-cell${isToday ? ' is-today' : ''}${isLastRow ? ' is-last-row' : ''}${isLastColumn ? ' is-last-column' : ''}`;
+        if (day > 0 && day <= days) {
           const cellDate = new Date(cursor.getFullYear(), cursor.getMonth(), day);
           const dayEvents = filtered.filter((event) => dateKey(eventDate(event.date)) === dateKey(cellDate));
           cell.innerHTML = `<span class="day-number">${day}</span>`;
