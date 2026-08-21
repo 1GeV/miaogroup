@@ -1,6 +1,6 @@
 ---
 series: "Strings, Fields and Holography Seminar"
-description: "A public seminar for talks and reading discussions across high-energy theory."
+# description: "A public seminar for talks and reading discussions across high-energy theory."
 contact: "Email: huzhw23@mail2.sysu.edu.cn"
 links:
   - label: "Seminar webpage"

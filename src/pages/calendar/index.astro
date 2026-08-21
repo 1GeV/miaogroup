@@ -22,14 +22,15 @@ const events = [
   }))
 ].sort((a, b) => a.date.valueOf() - b.date.valueOf());
 const serialized = events.map((data) => ({ ...data, date: data.date.toISOString(), endDate: data.endDate?.toISOString() }));
-const labels = { 'group-meeting': 'Group meeting', lecture: 'Lecture', seminar: 'Seminar', defense: 'Thesis defense', other: 'Other' };
+const labels = { 'group-meeting': 'Group meeting', seminar: 'Seminar', lecture: 'Lecture', defense: 'Thesis defense', other: 'Other' };
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
 ---
 <Layout title="Academic calendar">
   <section class="page-intro"><p class="eyebrow">Plan the week</p><h1>Academic calendar</h1><p>Group meetings, lectures, seminars, defenses, and other shared moments.</p></section>
-  <section class="calendar-toolbar" aria-label="Calendar controls"><div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div><label class="filter-label">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label><button class="button button-outline" id="export-ical">Export iCal <span aria-hidden="true">↓</span></button></section>
+  <section class="calendar-toolbar" aria-label="Calendar controls"><div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div><label class="calendar-control">Show <select id="range-filter"><option value="month">Current month</option><option value="all">All dates</option><option value="custom">Custom range</option></select></label><label class="calendar-control calendar-type-control">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label><button class="button button-outline" id="export-ical">Export iCal <span aria-hidden="true">↓</span></button></section>
+  <div class="custom-range" id="custom-range" hidden><label>Start <input id="range-start" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="Start date, YYYY-MM-DD" /></label><span aria-hidden="true">to</span><label>End <input id="range-end" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="End date, YYYY-MM-DD" /></label></div>
   <div id="calendar-app" data-events={JSON.stringify(serialized)} data-labels={JSON.stringify(labels)}>
-    <div class="calendar-monthbar"><button class="icon-button" id="previous-month" aria-label="Previous month">←</button><h2 id="month-label"></h2><button class="icon-button" id="next-month" aria-label="Next month">→</button></div>
+    <div class="calendar-monthbar" id="calendar-monthbar"><button class="icon-button" id="previous-month" aria-label="Previous month">←</button><div class="month-picker"><div class="picker-control" id="month-control"><label><span class="sr-only">Search month</span><input id="month-picker" type="text" autocomplete="off" role="combobox" aria-controls="month-menu" aria-expanded="false" aria-label="Month" /></label><div class="picker-menu" id="month-menu" role="listbox" hidden></div></div><div class="picker-control" id="year-control"><label><span class="sr-only">Search year</span><input id="year-picker" type="text" inputmode="numeric" autocomplete="off" role="combobox" aria-controls="year-menu" aria-expanded="false" aria-label="Year" /></label><div class="picker-menu" id="year-menu" role="listbox" hidden></div></div></div><button class="icon-button" id="next-month" aria-label="Next month">→</button></div>
     <div class="calendar-month-view" id="month-view"><div class="weekday-row">{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => <span>{day}</span>)}</div><div class="month-grid" id="month-grid"></div></div>
     <div class="calendar-list-view" id="list-view" hidden><div id="list-items"></div></div>
     <div class="calendar-empty" id="calendar-empty" hidden><span class="empty-index">01</span><h3>No activities match this view.</h3></div>
@@ -49,16 +50,83 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     let cursor = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
     let filter = 'all';
     let view = requestedEvent ? 'list' : 'month';
-    const monthLabel = document.querySelector('#month-label');
+    let range = 'month';
+    const monthPicker = document.querySelector('#month-picker');
+    const yearPicker = document.querySelector('#year-picker');
+    const monthMenu = document.querySelector('#month-menu');
+    const yearMenu = document.querySelector('#year-menu');
+    const monthControl = document.querySelector('#month-control');
+    const yearControl = document.querySelector('#year-control');
+    const monthBar = document.querySelector('#calendar-monthbar');
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const rangeStart = document.querySelector('#range-start');
+    const rangeEnd = document.querySelector('#range-end');
     const grid = document.querySelector('#month-grid');
     const list = document.querySelector('#list-items');
     const empty = document.querySelector('#calendar-empty');
     const visibleEvents = () => events.filter((event) => filter === 'all' || event.type === filter);
     const inCursorMonth = (event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth(); };
+    const inputDate = (value) => { const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value); if (!match) return null; const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])); return date.getFullYear() === Number(match[1]) && date.getMonth() === Number(match[2]) - 1 && date.getDate() === Number(match[3]) ? date : null; };
+    const matchesRange = (event) => {
+      const date = eventDate(event.date);
+      if (range === 'all') return true;
+      if (range === 'custom') {
+        const start = inputDate(rangeStart.value);
+        const end = inputDate(rangeEnd.value);
+        return Boolean(start && end && start <= end && date >= start && date <= end);
+      }
+      return inCursorMonth(event);
+    };
     const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    const pickerMatch = (value, query, numeric = false) => {
+      const normalized = query.trim().toLowerCase();
+      if (!normalized) return true;
+      if (numeric) return /^\d+$/.test(normalized) && value.startsWith(normalized);
+      if (/^\d+$/.test(normalized)) return String(monthNames.indexOf(value) + 1) === String(Number(normalized));
+      return value.toLowerCase().startsWith(normalized);
+    };
+    const highlightedOption = (value, query, numeric = false) => {
+      const normalized = query.trim();
+      if (!normalized || (!numeric && /^\d+$/.test(normalized))) return escapeHtml(value);
+      return `<span class="picker-match">${escapeHtml(value.slice(0, normalized.length))}</span>${escapeHtml(value.slice(normalized.length))}`;
+    };
+    const preferredPickerMatch = (values, query, numeric = false) => {
+      const matches = values.filter((value) => pickerMatch(value, query, numeric));
+      if (!matches.length) return null;
+      if (!numeric) return matches[0];
+      const currentYear = new Date().getFullYear();
+      return [...matches].sort((a, b) => Math.abs(Number(a) - currentYear) - Math.abs(Number(b) - currentYear) || Number(a) - Number(b))[0];
+    };
+    const yearOptions = () => [...new Set([
+      new Date().getFullYear(),
+      cursor.getFullYear(),
+      ...events.map((event) => eventDate(event.date).getFullYear()),
+      ...Array.from({ length: 11 }, (_, index) => new Date().getFullYear() - 5 + index)
+    ])].filter((year) => year >= 1900 && year <= 2100).sort((a, b) => a - b).map(String);
+    const renderPickerMenu = (input, menu, values, numeric = false) => {
+      const query = input.value;
+      const normalizedQuery = query.trim();
+      const preferredMatch = normalizedQuery ? preferredPickerMatch(values, query, numeric) : null;
+      menu.innerHTML = values.map((value) => {
+        const isMatching = Boolean(normalizedQuery && pickerMatch(value, query, numeric));
+        const isPreferred = value === preferredMatch;
+        const optionLabel = isMatching ? highlightedOption(value, query, numeric) : escapeHtml(value);
+        return `<button type="button" class="picker-option${value === input.dataset.selected ? ' is-selected' : ''}${isPreferred ? ' is-match' : ''}" role="option" data-value="${escapeHtml(value)}">${optionLabel}</button>`;
+      }).join('');
+      menu.querySelectorAll('.picker-option').forEach((option) => option.addEventListener('click', () => selectPickerValue(input, menu, option.dataset.value)));
+      const preferredOption = menu.querySelector('.picker-option.is-match');
+      if (preferredOption) menu.scrollTop = Math.max(0, preferredOption.offsetTop - (menu.clientHeight - preferredOption.offsetHeight) / 2);
+    };
+    const openPicker = (input, menu, values, numeric = false) => { input.dataset.selected = input.value; input.setAttribute('aria-expanded', 'true'); menu.hidden = false; renderPickerMenu(input, menu, values, numeric); input.select(); };
+    const closePicker = (input, menu, restore = true) => { if (restore && input.dataset.selected) input.value = input.dataset.selected; input.setAttribute('aria-expanded', 'false'); menu.hidden = true; };
+    const selectPickerValue = (input, menu, value) => { input.value = value; input.dataset.selected = value; closePicker(input, menu, false); if (input === monthPicker) cursor = new Date(cursor.getFullYear(), monthNames.indexOf(value), 1); else cursor = new Date(Number(value), cursor.getMonth(), 1); render(); };
+    const chooseFirstMatch = (input, menu, values, numeric = false) => { const match = preferredPickerMatch(values, input.value, numeric); if (match) selectPickerValue(input, menu, match); else closePicker(input, menu); };
     const render = () => {
       const filtered = visibleEvents();
-      monthLabel.textContent = cursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      monthPicker.value = monthNames[cursor.getMonth()];
+      monthPicker.dataset.selected = monthPicker.value;
+      yearPicker.value = String(cursor.getFullYear());
+      yearPicker.dataset.selected = yearPicker.value;
       grid.innerHTML = '';
       const first = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
       const startOffset = (first.getDay() + 6) % 7;
@@ -69,11 +137,12 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
         if (day > 0) { cell.innerHTML = `<span class="day-number">${day}</span>`; filtered.filter((event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth() && date.getDate() === day; }).forEach((event) => { const item = document.createElement('button'); item.type = 'button'; item.className = `calendar-event event-${event.type}`; item.setAttribute('aria-label', `View ${event.title} in list view`); item.innerHTML = `<span>${escapeHtml(labels[event.type])}</span><strong>${escapeHtml(event.title)}</strong>`; item.addEventListener('click', () => revealEvent(event.id)); cell.append(item); }); } else cell.classList.add('day-cell-empty');
         grid.append(cell);
       }
-      const monthlyEvents = filtered.filter(inCursorMonth);
-      list.innerHTML = monthlyEvents.length ? monthlyEvents.map((event) => { const date = eventDate(event.date); const references = (event.references || []).map((reference) => `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${escapeHtml(reference.label)} ↗</a>`).join(''); return `<article class="event-row" id="event-${escapeHtml(event.id)}"><time datetime="${event.date}"><strong>${date.getDate().toString().padStart(2, '0')}</strong><span>${date.toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${labels[event.type]}</p><h3>${escapeHtml(event.title)}</h3><p class="muted">${escapeHtml([event.speaker, event.time, event.location, event.onlineMeeting].filter(Boolean).join(' · ') || 'Details to follow')}</p>${references ? `<div class="calendar-links">${references}</div>` : ''}</div></article>`; }).join('') : '';
-      empty.hidden = monthlyEvents.length > 0;
+      const listEvents = filtered.filter(matchesRange);
+      list.innerHTML = listEvents.length ? listEvents.map((event) => { const date = eventDate(event.date); const references = (event.references || []).map((reference) => `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${escapeHtml(reference.label)} ↗</a>`).join(''); return `<article class="event-row" id="event-${escapeHtml(event.id)}"><time datetime="${event.date}"><strong>${date.getDate().toString().padStart(2, '0')}</strong><span>${date.toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${escapeHtml(labels[event.type])}</p><h3>${escapeHtml(event.title)}</h3><p class="muted">${escapeHtml([event.speaker, event.time, event.location, event.onlineMeeting].filter(Boolean).join(' · ') || 'Details to follow')}</p>${references ? `<div class="calendar-links">${references}</div>` : ''}</div></article>`; }).join('') : '';
+      empty.hidden = listEvents.length > 0;
     };
-    const setView = (nextView) => { view = nextView; document.querySelectorAll('.view-button').forEach((button) => button.classList.toggle('active', button.dataset.view === view)); document.querySelector('#month-view').hidden = view !== 'month'; document.querySelector('#list-view').hidden = view !== 'list'; };
+    const updateMonthBar = () => { monthBar.hidden = view === 'list' && range !== 'month'; };
+    const setView = (nextView) => { view = nextView; document.querySelectorAll('.view-button').forEach((button) => button.classList.toggle('active', button.dataset.view === view)); document.querySelector('#month-view').hidden = view !== 'month'; document.querySelector('#list-view').hidden = view !== 'list'; updateMonthBar(); };
     const revealEvent = (eventId) => {
       setView('list');
       requestAnimationFrame(() => {
@@ -84,11 +153,64 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
         window.setTimeout(() => target.classList.remove('event-row-highlight'), 1600);
       });
     };
-    document.querySelectorAll('.view-button').forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
+    document.querySelectorAll('.view-button').forEach((button) => button.addEventListener('click', () => { if (button.dataset.view === 'month') { range = 'month'; document.querySelector('#range-filter').value = 'month'; document.querySelector('#custom-range').hidden = true; render(); } setView(button.dataset.view); }));
+    document.querySelector('#range-filter').addEventListener('change', (event) => { range = event.target.value; document.querySelector('#custom-range').hidden = range !== 'custom'; if (range !== 'month') setView('list'); else updateMonthBar(); render(); });
     document.querySelector('#type-filter').addEventListener('change', (event) => { filter = event.target.value; render(); });
+    const pickerDefinitions = [
+      { input: monthPicker, menu: monthMenu, control: monthControl, values: monthNames, numeric: false },
+      { input: yearPicker, menu: yearMenu, control: yearControl, values: yearOptions, numeric: true }
+    ];
+    pickerDefinitions.forEach(({ input, menu, control, values, numeric }) => {
+      const getValues = () => numeric ? yearOptions() : values;
+      const open = () => openPicker(input, menu, getValues(), numeric);
+      input.addEventListener('focus', () => { if (menu.hidden) open(); });
+      input.addEventListener('click', () => { if (menu.hidden) open(); });
+      input.addEventListener('input', () => {
+        if (menu.hidden) open();
+        else renderPickerMenu(input, menu, getValues(), numeric);
+      });
+      input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          if (numeric && /^\d{4}$/.test(input.value) && Number(input.value) >= 1900 && Number(input.value) <= 2100) {
+            selectPickerValue(input, menu, input.value);
+          } else {
+            chooseFirstMatch(input, menu, getValues(), numeric);
+          }
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          closePicker(input, menu);
+          input.blur();
+        } else if (event.key === 'ArrowDown') {
+          event.preventDefault();
+          if (menu.hidden) open();
+          menu.querySelector('.picker-option')?.focus();
+        }
+      });
+      control.addEventListener('mousedown', (event) => {
+        if (event.target === input || menu.contains(event.target)) return;
+        event.preventDefault();
+        input.focus();
+      });
+      menu.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closePicker(input, menu);
+          input.focus();
+        }
+      });
+    });
+    document.addEventListener('click', (event) => {
+      pickerDefinitions.forEach(({ input, menu, control }) => {
+        if (!control.contains(event.target)) closePicker(input, menu);
+      });
+    });
+    rangeStart.addEventListener('input', render);
+    rangeEnd.addEventListener('input', render);
     document.querySelector('#previous-month').addEventListener('click', () => { cursor.setMonth(cursor.getMonth() - 1); render(); });
     document.querySelector('#next-month').addEventListener('click', () => { cursor.setMonth(cursor.getMonth() + 1); render(); });
-    document.querySelector('#export-ical').addEventListener('click', () => { const body = visibleEvents().map((event) => `BEGIN:VEVENT\nUID:${event.date}-${event.title.replace(/\s/g, '-')}@miaogroup\nDTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nDTSTART:${new Date(event.date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nSUMMARY:${event.title}\nDESCRIPTION:${event.description || ''}\nLOCATION:${event.location || ''}\nEND:VEVENT`).join('\n'); const blob = new Blob([`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Miao Group//Academic Calendar//EN\n${body}\nEND:VCALENDAR`], { type: 'text/calendar' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'miaogroup-calendar.ics'; link.click(); URL.revokeObjectURL(link.href); });
+    document.addEventListener('keydown', (event) => { if (monthBar.hidden || !['ArrowLeft', 'ArrowRight'].includes(event.key) || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement?.tagName)) return; event.preventDefault(); cursor.setMonth(cursor.getMonth() + (event.key === 'ArrowRight' ? 1 : -1)); render(); });
+    document.querySelector('#export-ical').addEventListener('click', () => { const exportEvents = visibleEvents().filter(matchesRange); const body = exportEvents.map((event) => `BEGIN:VEVENT\nUID:${event.date}-${event.title.replace(/\s/g, '-')}@miaogroup\nDTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nDTSTART:${new Date(event.date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nSUMMARY:${event.title}\nDESCRIPTION:${event.description || ''}\nLOCATION:${event.location || ''}\nEND:VEVENT`).join('\n'); const blob = new Blob([`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Miao Group//Academic Calendar//EN\n${body}\nEND:VCALENDAR`], { type: 'text/calendar' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'miaogroup-calendar.ics'; link.click(); URL.revokeObjectURL(link.href); });
     render();
     setView(view);
     if (requestedEvent) revealEvent(requestedEvent.id);

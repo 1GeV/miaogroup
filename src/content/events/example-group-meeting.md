@@ -7,7 +7,7 @@ time: "15:00-17:00"
 location: "Room to be announced"
 speaker: "Miao Group"
 onlineMeeting: "Tencent Meeting: 123 456 789"
-public: true
+public: false
 description: "Example calendar entry. Delete this file when real events are available."
 references:
   - label: "arXiv"
