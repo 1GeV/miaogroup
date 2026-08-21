@@ -70,7 +70,7 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
           </div>
           <div class="seminar-list">
             {termRecords.map((record) => (
-              <article class="seminar-card">
+              <article class="seminar-card" id={`talk-${record.id}`}>
                 <div class="seminar-card-date">{formatDate(record.data.date)}</div>
                 <div>
                   <p class="event-type">{record.data.speaker}</p>
@@ -99,5 +99,17 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
         status.textContent = new Date(archiveAfter) < now ? 'Archive' : new Date(firstTalkDate) > now ? 'Upcoming term' : 'Current term';
       }
     });
+    const revealTalkFromHash = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1));
+      const target = document.getElementById(id);
+      if (!target?.classList.contains('seminar-card')) return;
+      requestAnimationFrame(() => {
+        target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        target.classList.add('seminar-card-highlight');
+        window.setTimeout(() => target.classList.remove('seminar-card-highlight'), 1600);
+      });
+    };
+    revealTalkFromHash();
+    window.addEventListener('hashchange', revealTalkFromHash);
   </script>
 </Layout>

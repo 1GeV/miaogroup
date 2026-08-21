@@ -17,7 +17,6 @@ const currentSeminar = seminars
   .sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf())[0] ?? seminars[0];
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
 const typeLabel = (type: string) => type.replace('-', ' ');
-const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
 ---
 <Layout title="Home">
   <section class="hero section-grid">
@@ -58,7 +57,7 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
     <div class="event-list">{upcoming.map(({ kind, entry }) => {
       const { data } = entry;
       const href = kind === 'seminar'
-        ? `${base}seminars/#${seriesAnchor(data.series)}`
+        ? `${base}seminars/#talk-${entry.id}`
         : `${base}calendar/?event=${encodeURIComponent(entry.id)}`;
       return <a class="event-row event-row-link" href={href} aria-label={`View ${data.title}`}><time datetime={data.date.toISOString()}><strong>{data.date.getDate().toString().padStart(2, '0')}</strong><span>{formatDate(data.date).split(' ')[0]}</span></time><div><p class="event-type">{typeLabel(kind === 'seminar' ? 'seminar' : data.type)}</p><h3>{data.title}</h3><p class="muted">{[data.speaker, data.time, kind === 'event' && data.location, data.onlineMeeting].filter(Boolean).join(' · ')}</p></div><span class="event-row-arrow" aria-hidden="true">→</span></a>;
     })}</div>
