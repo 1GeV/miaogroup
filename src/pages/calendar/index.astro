@@ -26,7 +26,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     <div class="calendar-monthbar"><button class="icon-button" id="previous-month" aria-label="Previous month">←</button><h2 id="month-label"></h2><button class="icon-button" id="next-month" aria-label="Next month">→</button></div>
     <div class="calendar-month-view" id="month-view"><div class="weekday-row">{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => <span>{day}</span>)}</div><div class="month-grid" id="month-grid"></div></div>
     <div class="calendar-list-view" id="list-view" hidden><div id="list-items"></div></div>
-    <div class="calendar-empty" id="calendar-empty" hidden><span class="empty-index">01</span><h3>No activities match this view.</h3><p>Add or adjust a Markdown event file to populate the calendar.</p></div>
+    <div class="calendar-empty" id="calendar-empty" hidden><span class="empty-index">01</span><h3>No activities match this view.</h3></div>
   </div>
   <script>
     const app = document.querySelector('#calendar-app');

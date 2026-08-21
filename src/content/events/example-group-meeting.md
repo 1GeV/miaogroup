@@ -9,7 +9,7 @@ speaker: "Miao Group"
 onlineMeeting: "Tencent Meeting: 123 456 789"
 public: true
 description: "Example calendar entry. Delete this file when real events are available."
-draft: false
+draft: true
 ---
 
 This is a temporary example event.

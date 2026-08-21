@@ -9,7 +9,7 @@ onlineMeeting: "Zoom Meeting ID: 123 456 789 · Passcode: 2468"
 references:
   - label: "arXiv"
     url: "https://arxiv.org/"
-draft: false
+draft: true
 ---
 
 This is a temporary example seminar record.
