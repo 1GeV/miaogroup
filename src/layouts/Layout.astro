@@ -14,6 +14,13 @@ const pathname = Astro.url.pathname;
     <meta name="description" content={description} />
     <link rel="icon" href={`${import.meta.env.BASE_URL}favicon.svg`} />
     <title>{title} · Miao Group</title>
+    <script is:inline>
+      window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)'], ['$', '$']] },
+        svg: { fontCache: 'global' }
+      };
+    </script>
+    <script is:inline defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" onload="window.dispatchEvent(new Event('mathjax-ready'))"></script>
   </head>
   <body>
     <div class="site-shell">
@@ -37,5 +44,43 @@ const pathname = Astro.url.pathname;
         <span>Asia/Shanghai</span>
       </footer>
     </div>
+    <script is:inline>
+      document.addEventListener('click', async (event) => {
+        const button = event.target.closest('[data-copy]');
+        if (!button) return;
+        const text = button.getAttribute('data-copy');
+        if (!text) return;
+        try {
+          if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text);
+          else throw new Error('Clipboard API unavailable');
+        } catch {
+          const helper = document.createElement('textarea');
+          helper.value = text;
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.append(helper);
+          helper.select();
+          document.execCommand('copy');
+          helper.remove();
+        }
+        if (button.matches('button')) {
+          const original = button.textContent;
+          button.textContent = 'Copied';
+          window.setTimeout(() => { button.textContent = original; }, 1400);
+        } else {
+          button.classList.add('is-copied');
+          button.title = 'Copied';
+          window.setTimeout(() => { button.classList.remove('is-copied'); button.removeAttribute('title'); }, 1400);
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        const target = event.target.closest?.('[data-copy]');
+        if (!target) return;
+        event.preventDefault();
+        target.click();
+      });
+      window.addEventListener('mathjax-ready', () => window.MathJax?.typesetPromise?.());
+    </script>
   </body>
 </html>

@@ -55,19 +55,8 @@
 .marker-one { left: 98px; top: 148px; }
 .marker-two { left: 304px; top: 27px; }
 
-.formula-correspondence { left: 20px; top: 82px; }
 .formula-correspondence i { font-style: italic; }
 .formula-correspondence sub { font-size: .68em; font-style: normal; }
-
-.diagram-caption {
-  position: absolute;
-  right: 18px;
-  bottom: 31px;
-  color: var(--muted);
-  font-family: var(--serif);
-  font-size: 13px;
-  font-style: italic;
-}
 
 @media (max-width: 760px) {
   .diagram-boundary { width: 245px; height: 245px; left: 40px; }
@@ -97,7 +86,7 @@
 .svg-network path { stroke: #b2c8d5; stroke-linecap: round; fill: none; }
 .svg-operators circle,
 .svg-network circle { fill: var(--paper); stroke: var(--teal); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.svg-label { fill: var(--muted); font-family: var(--serif); font-size: 13px; font-style: italic; }
+.svg-label { fill: var(--muted); font-family: var(--serif); font-size: 13px; font-style: normal; }
 .svg-bulk { fill: var(--blue); }
 .svg-bulk-label { fill: white; font-family: var(--serif); font-size: 12px; text-anchor: middle; }
 
@@ -212,19 +201,22 @@
 }
 
 .formula-correspondence {
-  left: 20px;
-  top: 23px;
-}
-
-.diagram-caption {
-  right: 18px;
-  bottom: 24px;
+  left: 8.08%;
+  top: 21px;
+  line-height: 1.2;
 }
 
 @media (max-width: 760px) {
   .diagram-field { inset: 36px 8px 48px; }
   .bulk-network { left: 28px; right: 28px; }
   .network-core { top: 143px; }
-  .formula-correspondence { left: 8px; top: 10px; }
-  .diagram-caption { right: 8px; bottom: 18px; }
+  .formula-correspondence { left: 8.08%; top: 9px; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .diagram-boundary-line, .diagram-geodesic, .network-line { background:#6f8fa5; border-color:#6f8fa5; }
+  .diagram-boundary, .diagram-bulk { border-color:#587487; }
+  .boundary-operators span, .network-node { background:var(--paper); }
+  .svg-boundary, .svg-network line, .svg-network path { stroke:#6f8fa5; }
+  .svg-operators circle, .svg-network circle { fill:var(--paper); }
 }

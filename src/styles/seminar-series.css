@@ -1,6 +1,9 @@
 .series-overview { max-width:690px; margin:-12px 0 38px; padding:18px 0 0; border-top:1px solid var(--line); }
 .series-overview > p:first-child { margin-bottom:8px; color:var(--muted); }
 .series-contact { margin:0; color:var(--ink); font-size:13px; }
+.series-contact a { color:var(--teal); }
+.series-contact a:hover { color:var(--blue); }
+.series-links .reference-label { color:var(--muted); font-size:12px; font-weight:700; }
 .series-links { margin-top:14px; }
 .seminar-card { scroll-margin-top:24px; transition:background-color .2s ease, box-shadow .2s ease; }
 .seminar-card-highlight { background:var(--pale); box-shadow:inset 3px 0 0 var(--teal); }

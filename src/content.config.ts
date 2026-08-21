@@ -1,6 +1,21 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
+const onlineMeetingEntry = z.union([
+  z.string(),
+  z.object({
+    label: z.string().optional(),
+    url: z.string().url().optional(),
+    copy: z.string().optional(),
+    copyText: z.string().optional()
+  })
+]);
+
+const onlineMeeting = z.union([
+  onlineMeetingEntry,
+  z.array(onlineMeetingEntry)
+]).optional();
+
 const events = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/events' }),
   schema: z.object({
@@ -11,8 +26,8 @@ const events = defineCollection({
     time: z.string().optional(),
     location: z.string().optional(),
     speaker: z.string().optional(),
-    onlineMeeting: z.string().optional(),
-    references: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
+    onlineMeeting,
+    references: z.array(z.object({ label: z.string(), url: z.string().url().optional() })).default([]),
     description: z.string().optional(),
     public: z.boolean().default(false),
     draft: z.boolean().default(false)
@@ -29,8 +44,9 @@ const seminars = defineCollection({
     speaker: z.string(),
     title: z.string(),
     paper: z.string().optional(),
-    references: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
-    onlineMeeting: z.string().optional(),
+    description: z.string().optional(),
+    references: z.array(z.object({ label: z.string(), url: z.string().url().optional() })).default([]),
+    onlineMeeting,
     recordingUrl: z.string().url().optional(),
     draft: z.boolean().default(false)
   })
@@ -51,7 +67,7 @@ const seminarSeries = defineCollection({
     series: z.string(),
     description: z.string().optional(),
     contact: z.string().optional(),
-    links: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
+    links: z.array(z.object({ label: z.string(), url: z.string().url().optional() })).default([]),
     draft: z.boolean().default(false)
   })
 });

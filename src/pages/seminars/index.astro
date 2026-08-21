@@ -1,25 +1,30 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import { normalizeOnlineMeetings, renderContact, renderMath, renderMeetingCopy } from '../../lib/content';
 
 const records = (await getCollection('seminars', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 const termSettings = await getCollection('seminarTerms');
 const seriesSettings = await getCollection('seminarSeries', ({ data }) => !data.draft);
+const seriesKey = (value: string) => value.replace(/\$[^$\n]*\$/g, '').replace(/\s+/g, ' ').trim();
+const matchingSeries = (value: string, candidate: string) => value === candidate || seriesKey(value) === seriesKey(candidate);
 
 const seriesNames = [...new Set(records.map((record) => record.data.series))];
 const seriesGroups = seriesNames.map((series) => {
   const seriesRecords = records.filter((record) => record.data.series === series);
   const semesters = [...new Set(seriesRecords.map((record) => record.data.semester))];
-  const settings = seriesSettings.find((setting) => setting.data.series === series)?.data;
+  const settings = seriesSettings.find((setting) => matchingSeries(setting.data.series, series))?.data;
+  const termSetting = (semester: string) => termSettings.find((term) => term.data.semester === semester && matchingSeries(term.data.series, series));
+  const displaySeries = termSettings.find((term) => matchingSeries(term.data.series, series))?.data.series ?? settings?.series ?? series;
   return {
-    series,
+    series: displaySeries,
     description: settings?.description,
     contact: settings?.contact,
     links: settings?.links ?? [],
     terms: semesters.map((semester) => {
       const termRecords = seriesRecords.filter((record) => record.data.semester === semester);
-      const configuredArchiveDate = termSettings.find((term) => term.data.series === series && term.data.semester === semester)?.data.archiveAfter;
+      const configuredArchiveDate = termSetting(semester)?.data.archiveAfter;
       const archiveAfter = configuredArchiveDate ?? new Date(Math.max(...termRecords.map((record) => record.data.date.valueOf())));
       const firstTalkDate = new Date(Math.min(...termRecords.map((record) => record.data.date.valueOf())));
       const now = new Date();
@@ -50,14 +55,14 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
       <div class="section-heading">
         <div>
           <p class="eyebrow">Seminar</p>
-          <h2>{series}</h2>
+          <h2 set:html={renderMath(series)}></h2>
         </div>
       </div>
       {(description || contact || links.length) && <div class="series-overview">
-        {description && <p>{description}</p>}
-        {contact && <p class="series-contact">{contact}</p>}
+        {description && <p set:html={renderMath(description)}></p>}
+        {contact && <p class="series-contact" set:html={renderContact(contact)}></p>}
         {links.length > 0 && <div class="card-links series-links">
-          {links.map((link) => <a href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a>)}
+          {links.map((link) => link.url ? <a href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a> : <span class="reference-label">{link.label}</span>)}
         </div>}
       </div>}
       {terms.map(({ semester, records: termRecords, archiveAfter, firstTalkDate, status }) => (
@@ -65,7 +70,7 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
           <div class="section-heading">
             <div>
               <p class="eyebrow term-status" data-archive-after={archiveAfter.toISOString()} data-first-talk={firstTalkDate.toISOString()}>{status}</p>
-              <h3>{semester}</h3>
+              <h3 set:html={renderMath(semester)}></h3>
             </div>
           </div>
           <div class="seminar-list">
@@ -73,13 +78,14 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
               <article class="seminar-card" id={`talk-${record.id}`}>
                 <div class="seminar-card-date">{formatDate(record.data.date)}</div>
                 <div>
-                  <p class="event-type">{record.data.speaker}</p>
-                  <h3>{record.data.title}</h3>
+                  <p class="event-type" set:html={renderMath(record.data.speaker)}></p>
+                  <h3 set:html={renderMath(record.data.title)}></h3>
                   {record.data.time && <p class="muted">Time: {record.data.time}</p>}
-                  {record.data.paper && <p class="muted">Reading: {record.data.paper}</p>}
-                  {record.data.onlineMeeting && <p class="muted">{record.data.onlineMeeting}</p>}
+                  {record.data.description && <p class="muted" set:html={renderMath(record.data.description)}></p>}
+                  {record.data.paper && <p class="muted" set:html={renderMath(`Reading: ${record.data.paper}`)}></p>}
+                  {normalizeOnlineMeetings(record.data.onlineMeeting).length > 0 && <p class="muted meeting-line">{normalizeOnlineMeetings(record.data.onlineMeeting).map((meeting, index) => <>{index > 0 && ' · '}{meeting.url ? <a class="meeting-link" href={meeting.url} target="_blank" rel="noreferrer">{meeting.label} ↗</a> : meeting.copy === meeting.label ? <span set:html={renderMeetingCopy(meeting.copy || meeting.label)} /> : <span class="meeting-label">{meeting.label}</span>}{meeting.copy && meeting.copy !== meeting.label && <> · <span set:html={renderMeetingCopy(meeting.copy)} /></>}</>)}</p>}
                   <div class="card-links">
-                    {record.data.references.map((reference) => <a href={reference.url} target="_blank" rel="noreferrer">{reference.label} ↗</a>)}
+                    {record.data.references.map((reference) => reference.url ? <a href={reference.url} target="_blank" rel="noreferrer" set:html={`${renderMath(reference.label)} ↗`}></a> : <span class="reference-label" set:html={renderMath(reference.label)}></span>)}
                     {record.data.recordingUrl && <a href={record.data.recordingUrl} target="_blank" rel="noreferrer">Recording ↗</a>}
                   </div>
                 </div>

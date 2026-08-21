@@ -3,8 +3,21 @@ import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 const eventEntries = await getCollection('events', ({ data }) => !data.draft);
 const seminarEntries = await getCollection('seminars', ({ data }) => !data.draft);
+type MeetingValue = { label?: string; url?: string; copy?: string; copyText?: string };
+const normalizeOnlineMeetings = (value: unknown) => {
+  const entries = Array.isArray(value) ? value : value ? [value] : [];
+  return entries.map((entry) => {
+    if (typeof entry === 'string') return { label: entry, copy: entry };
+    const meeting = entry as MeetingValue;
+    return {
+      label: meeting.label || 'Online meeting',
+      url: meeting.url,
+      copy: meeting.copy || meeting.copyText
+    };
+  }).filter((meeting) => meeting.label || meeting.url || meeting.copy);
+};
 const events = [
-  ...eventEntries.map(({ id, data }) => ({ id, ...data, endDate: data.endDate })),
+  ...eventEntries.map(({ id, data }) => ({ id, ...data, endDate: data.endDate, onlineMeetings: normalizeOnlineMeetings(data.onlineMeeting) })),
   ...seminarEntries.map(({ id, data }) => ({
     id: `seminar-${id}`,
     title: data.title,
@@ -13,8 +26,8 @@ const events = [
     endDate: undefined,
     time: data.time,
     speaker: data.speaker,
-    onlineMeeting: data.onlineMeeting,
-    description: data.paper,
+    onlineMeetings: normalizeOnlineMeetings(data.onlineMeeting),
+    description: data.description || data.paper,
     references: [
       ...data.references,
       ...(data.recordingUrl ? [{ label: 'Recording', url: data.recordingUrl }] : [])
@@ -27,10 +40,12 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
 ---
 <Layout title="Academic calendar">
   <section class="page-intro"><p class="eyebrow">Plan the week</p><h1>Academic calendar</h1><p>Group meetings, lectures, seminars, defenses, and other shared moments.</p></section>
-  <section class="calendar-toolbar" aria-label="Calendar controls"><div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div><label class="calendar-control">Show <select id="range-filter"><option value="month">Selected month</option><option value="all">All dates</option><option value="custom">Custom range</option></select></label><label class="calendar-control calendar-type-control">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label><button class="button button-outline" id="export-ical">Export iCal <span aria-hidden="true">↓</span></button></section>
+  <section class="calendar-toolbar" id="calendar-toolbar" aria-label="Calendar controls"><div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div><label class="calendar-control">Show <select id="range-filter"><option value="month">Selected month</option><option value="all">All dates</option><option value="custom">Custom range</option></select></label><label class="calendar-control calendar-type-control">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label><button class="button button-outline" id="export-ical">Export iCal <span aria-hidden="true">↓</span></button></section>
+  <div class="calendar-search-row" id="calendar-search-row" hidden><label class="calendar-search">Search <input id="event-search" type="search" autocomplete="off" /></label></div>
   <div class="custom-range" id="custom-range" hidden><label>Start <input id="range-start" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="Start date, YYYY-MM-DD" /></label><span aria-hidden="true">to</span><label>End <input id="range-end" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="End date, YYYY-MM-DD" /></label></div>
   <div id="calendar-app" data-events={JSON.stringify(serialized)} data-labels={JSON.stringify(labels)}>
     <div class="calendar-monthbar" id="calendar-monthbar"><div class="month-nav"><button class="icon-button" id="previous-month" aria-label="Previous month">←</button><div class="month-picker"><div class="picker-control" id="month-control"><label><span class="sr-only">Search month</span><input id="month-picker" type="text" autocomplete="off" role="combobox" aria-controls="month-menu" aria-expanded="false" aria-label="Month" /></label><div class="picker-menu" id="month-menu" role="listbox" hidden></div></div><div class="picker-control" id="year-control"><label><span class="sr-only">Search year</span><input id="year-picker" type="text" inputmode="numeric" autocomplete="off" role="combobox" aria-controls="year-menu" aria-expanded="false" aria-label="Year" /></label><div class="picker-menu" id="year-menu" role="listbox" hidden></div></div></div><button class="icon-button" id="next-month" aria-label="Next month">→</button></div><button class="month-today" id="today-month" type="button" hidden>Today</button></div>
+    <div class="calendar-legend" id="calendar-legend" aria-label="Activity types"><span class="legend-item"><i class="legend-dot event-group-meeting"></i>Group meeting</span><span class="legend-item"><i class="legend-dot event-seminar"></i>Seminar</span><span class="legend-item"><i class="legend-dot event-lecture"></i>Lecture</span><span class="legend-item"><i class="legend-dot event-defense"></i>Thesis defense</span><span class="legend-item"><i class="legend-dot event-other"></i>Other</span></div>
     <div class="calendar-month-view" id="month-view"><div class="weekday-row">{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => <span>{day}</span>)}</div><div class="month-grid" id="month-grid"></div></div>
     <div class="calendar-list-view" id="list-view" hidden><div id="list-items"></div></div>
     <div class="calendar-empty" id="calendar-empty" hidden><span class="empty-index">01</span><h3>No activities match this view.</h3></div>
@@ -50,8 +65,10 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     const baseDate = requestedEvent ? eventDate(requestedEvent.date) : new Date();
     let cursor = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
     let filter = 'all';
+    let searchQuery = '';
     let view = requestedEvent ? 'list' : 'month';
     let range = 'month';
+    let selectedDateKey = null;
     const monthPicker = document.querySelector('#month-picker');
     const yearPicker = document.querySelector('#year-picker');
     const monthMenu = document.querySelector('#month-menu');
@@ -60,26 +77,36 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     const yearControl = document.querySelector('#year-control');
     const monthBar = document.querySelector('#calendar-monthbar');
     const todayButton = document.querySelector('#today-month');
+    const calendarToolbar = document.querySelector('#calendar-toolbar');
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const rangeStart = document.querySelector('#range-start');
     const rangeEnd = document.querySelector('#range-end');
+    const eventSearch = document.querySelector('#event-search');
+    const searchRow = document.querySelector('#calendar-search-row');
+    const legend = document.querySelector('#calendar-legend');
     const grid = document.querySelector('#month-grid');
     const list = document.querySelector('#list-items');
     const empty = document.querySelector('#calendar-empty');
-    const visibleEvents = () => events.filter((event) => filter === 'all' || event.type === filter);
+    const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const searchableText = (event) => [event.title, event.speaker, event.location, event.description, ...(event.onlineMeetings || []).flatMap((meeting) => [meeting.label, meeting.url, meeting.copy])].filter(Boolean).join(' ').toLowerCase();
+    const visibleEvents = () => events.filter((event) => (filter === 'all' || event.type === filter) && (!searchQuery || searchableText(event).includes(searchQuery)));
     const inCursorMonth = (event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth(); };
     const inputDate = (value) => { const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value); if (!match) return null; const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])); return date.getFullYear() === Number(match[1]) && date.getMonth() === Number(match[2]) - 1 && date.getDate() === Number(match[3]) ? date : null; };
     const matchesRange = (event) => {
       const date = eventDate(event.date);
+      if (selectedDateKey) return dateKey(date) === selectedDateKey;
       if (range === 'all') return true;
       if (range === 'custom') {
         const start = inputDate(rangeStart.value);
         const end = inputDate(rangeEnd.value);
-        return Boolean(start && end && start <= end && date >= start && date <= end);
+        if (!start) return false;
+        if (!end) return dateKey(date) === dateKey(start);
+        return start <= end && date >= start && date <= end;
       }
       return inCursorMonth(event);
     };
     const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    const renderMathText = (value) => escapeHtml(value).replace(/\$([^$\n]+)\$/g, '\\($1\\)');
     const pickerMatch = (value, query, numeric = false) => {
       const normalized = query.trim().toLowerCase();
       if (!normalized) return true;
@@ -121,8 +148,21 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     };
     const openPicker = (input, menu, values, numeric = false) => { input.dataset.selected = input.value; input.setAttribute('aria-expanded', 'true'); menu.hidden = false; renderPickerMenu(input, menu, values, numeric); input.select(); };
     const closePicker = (input, menu, restore = true) => { if (restore && input.dataset.selected) input.value = input.dataset.selected; input.setAttribute('aria-expanded', 'false'); menu.hidden = true; };
-    const selectPickerValue = (input, menu, value) => { input.value = value; input.dataset.selected = value; closePicker(input, menu, false); if (input === monthPicker) cursor = new Date(cursor.getFullYear(), monthNames.indexOf(value), 1); else cursor = new Date(Number(value), cursor.getMonth(), 1); render(); };
+    const selectPickerValue = (input, menu, value) => { input.value = value; input.dataset.selected = value; closePicker(input, menu, false); selectedDateKey = null; if (input === monthPicker) cursor = new Date(cursor.getFullYear(), monthNames.indexOf(value), 1); else cursor = new Date(Number(value), cursor.getMonth(), 1); render(); };
     const chooseFirstMatch = (input, menu, values, numeric = false) => { const match = preferredPickerMatch(values, input.value, numeric); if (match) selectPickerValue(input, menu, match); else closePicker(input, menu); };
+    const renderMeetingCopy = (value) => escapeHtml(value).replace(/\d(?:[\d-]*\d)?(?:\s+\d(?:[\d-]*\d)?)*/g, (match) => { const copyValue = match.trim(); return `<span class="meeting-copy-number" data-copy="${escapeHtml(copyValue)}" tabindex="0" role="button" aria-label="Copy ${escapeHtml(copyValue)}">${match}</span>`; });
+    const renderOnlineMeetings = (meetings = []) => meetings.map((meeting, index) => {
+      const separator = index ? ' · ' : '';
+      const label = escapeHtml(meeting.label || 'Online meeting');
+      if (!meeting.url && meeting.copy && meeting.copy === meeting.label) return `${separator}${renderMeetingCopy(meeting.copy)}`;
+      const labelMarkup = meeting.url
+        ? `<a class="meeting-link" href="${escapeHtml(meeting.url)}" target="_blank" rel="noreferrer">${label} ↗</a>`
+        : `<span class="meeting-label">${label}</span>`;
+      const copyMarkup = meeting.copy && meeting.copy !== meeting.label ? ` · ${renderMeetingCopy(meeting.copy)}` : '';
+      return `${separator}${labelMarkup}${copyMarkup}`;
+    }).join('');
+    const typesetCalendar = () => { if (window.MathJax?.typesetPromise) window.MathJax.typesetPromise([grid, list]); };
+    window.addEventListener('mathjax-ready', typesetCalendar);
     const render = () => {
       const filtered = visibleEvents();
       monthPicker.value = monthNames[cursor.getMonth()];
@@ -138,15 +178,26 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
         const day = index - startOffset + 1;
         const isToday = day === today.getDate() && cursor.getFullYear() === today.getFullYear() && cursor.getMonth() === today.getMonth();
         const cell = document.createElement('div'); cell.className = `day-cell${isToday ? ' is-today' : ''}`;
-        if (day > 0) { cell.innerHTML = `<span class="day-number">${day}</span>`; filtered.filter((event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth() && date.getDate() === day; }).forEach((event) => { const item = document.createElement('button'); item.type = 'button'; item.className = `calendar-event event-${event.type}`; item.setAttribute('aria-label', `View ${event.title} in list view`); item.innerHTML = `<span>${escapeHtml(labels[event.type])}</span><strong>${escapeHtml(event.title)}</strong>`; item.addEventListener('click', () => revealEvent(event.id)); cell.append(item); }); } else cell.classList.add('day-cell-empty');
+        if (day > 0) {
+          const cellDate = new Date(cursor.getFullYear(), cursor.getMonth(), day);
+          const dayEvents = filtered.filter((event) => dateKey(eventDate(event.date)) === dateKey(cellDate));
+          cell.innerHTML = `<span class="day-number">${day}</span>`;
+          if (window.matchMedia('(max-width: 760px)').matches) cell.addEventListener('click', () => revealDate(cellDate));
+          dayEvents.forEach((event) => {
+            const item = document.createElement('button'); item.type = 'button'; item.className = `calendar-event event-${event.type}`; item.setAttribute('aria-label', `View ${event.title} in list view`); item.innerHTML = `<span>${escapeHtml(labels[event.type])}</span><strong>${renderMathText(event.title)}</strong>`;
+            item.addEventListener('click', (clickEvent) => { clickEvent.stopPropagation(); revealEvent(event.id); }); cell.append(item);
+          });
+        } else cell.classList.add('day-cell-empty');
         grid.append(cell);
       }
       const listEvents = filtered.filter(matchesRange);
-      list.innerHTML = listEvents.length ? listEvents.map((event) => { const date = eventDate(event.date); const references = (event.references || []).map((reference) => `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${escapeHtml(reference.label)} ↗</a>`).join(''); return `<article class="event-row" id="event-${escapeHtml(event.id)}"><time datetime="${event.date}"><strong>${date.getDate().toString().padStart(2, '0')}</strong><span>${date.toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${escapeHtml(labels[event.type])}</p><h3>${escapeHtml(event.title)}</h3><p class="muted">${escapeHtml([event.speaker, event.time, event.location, event.onlineMeeting].filter(Boolean).join(' · ') || 'Details to follow')}</p>${references ? `<div class="calendar-links">${references}</div>` : ''}</div></article>`; }).join('') : '';
+      list.innerHTML = listEvents.length ? listEvents.map((event) => { const date = eventDate(event.date); const references = (event.references || []).map((reference) => reference.url ? `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${renderMathText(reference.label)} ↗</a>` : `<span class="reference-label">${renderMathText(reference.label)}</span>`).join(''); const meetings = renderOnlineMeetings(event.onlineMeetings); const details = [event.speaker, event.time, event.location].filter(Boolean).join(' · '); const detailText = details || (!meetings ? 'Details to follow' : ''); const description = event.description ? `<p class="muted event-description">${renderMathText(event.description)}</p>` : ''; return `<article class="event-row" id="event-${escapeHtml(event.id)}" data-date-key="${dateKey(date)}"><time datetime="${event.date}"><strong>${date.getDate().toString().padStart(2, '0')}</strong><span>${date.toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${escapeHtml(labels[event.type])}</p><h3>${renderMathText(event.title)}</h3><p class="muted event-details">${renderMathText(detailText)}${meetings ? `${detailText ? ' · ' : ''}${meetings}` : ''}</p>${description}${references ? `<div class="calendar-links">${references}</div>` : ''}</div></article>`; }).join('') : '';
       empty.hidden = listEvents.length > 0;
+      typesetCalendar();
     };
     const updateMonthBar = () => { monthBar.hidden = view === 'list' && range !== 'month'; };
-    const setView = (nextView) => { view = nextView; document.querySelectorAll('.view-button').forEach((button) => button.classList.toggle('active', button.dataset.view === view)); document.querySelector('#month-view').hidden = view !== 'month'; document.querySelector('#list-view').hidden = view !== 'list'; updateMonthBar(); };
+    const updateSearchVisibility = () => { searchRow.hidden = !(view === 'list' && range === 'all'); };
+    const setView = (nextView) => { view = nextView; document.querySelectorAll('.view-button').forEach((button) => button.classList.toggle('active', button.dataset.view === view)); document.querySelector('#month-view').hidden = view !== 'month'; document.querySelector('#list-view').hidden = view !== 'list'; updateMonthBar(); updateSearchVisibility(); legend.hidden = view !== 'month'; };
     const revealEvent = (eventId) => {
       setView('list');
       requestAnimationFrame(() => {
@@ -157,9 +208,22 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
         window.setTimeout(() => target.classList.remove('event-row-highlight'), 1600);
       });
     };
-    document.querySelectorAll('.view-button').forEach((button) => button.addEventListener('click', () => { if (button.dataset.view === 'month') { range = 'month'; document.querySelector('#range-filter').value = 'month'; document.querySelector('#custom-range').hidden = true; render(); } setView(button.dataset.view); }));
-    document.querySelector('#range-filter').addEventListener('change', (event) => { range = event.target.value; document.querySelector('#custom-range').hidden = range !== 'custom'; if (range !== 'month') setView('list'); else updateMonthBar(); render(); });
+    const revealDate = (date) => {
+      selectedDateKey = dateKey(date);
+      setView('list');
+      render();
+      requestAnimationFrame(() => {
+        const targets = [...list.querySelectorAll(`[data-date-key="${selectedDateKey}"]`)];
+        if (!targets.length) return;
+        targets[0].scrollIntoView({ block: 'center', behavior: 'smooth' });
+        targets.forEach((target) => target.classList.add('event-row-highlight'));
+        window.setTimeout(() => targets.forEach((target) => target.classList.remove('event-row-highlight')), 1600);
+      });
+    };
+    document.querySelectorAll('.view-button').forEach((button) => button.addEventListener('click', () => { if (button.dataset.view === 'month') { range = 'month'; selectedDateKey = null; searchQuery = ''; eventSearch.value = ''; document.querySelector('#range-filter').value = 'month'; document.querySelector('#custom-range').hidden = true; } else selectedDateKey = null; setView(button.dataset.view); render(); }));
+    document.querySelector('#range-filter').addEventListener('change', (event) => { range = event.target.value; selectedDateKey = null; searchQuery = ''; eventSearch.value = ''; document.querySelector('#custom-range').hidden = range !== 'custom'; if (range !== 'month') setView('list'); else { setView('month'); updateMonthBar(); } updateSearchVisibility(); render(); });
     document.querySelector('#type-filter').addEventListener('change', (event) => { filter = event.target.value; render(); });
+    eventSearch.addEventListener('input', (event) => { searchQuery = event.target.value.trim().toLowerCase(); render(); });
     const pickerDefinitions = [
       { input: monthPicker, menu: monthMenu, control: monthControl, values: monthNames, numeric: false },
       { input: yearPicker, menu: yearMenu, control: yearControl, values: yearOptions, numeric: true }
@@ -211,13 +275,18 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     });
     rangeStart.addEventListener('input', render);
     rangeEnd.addEventListener('input', render);
-    document.querySelector('#previous-month').addEventListener('click', () => { cursor.setMonth(cursor.getMonth() - 1); render(); });
-    document.querySelector('#next-month').addEventListener('click', () => { cursor.setMonth(cursor.getMonth() + 1); render(); });
-    todayButton.addEventListener('click', () => { cursor = new Date(today.getFullYear(), today.getMonth(), 1); render(); });
-    document.addEventListener('keydown', (event) => { if (monthBar.hidden || !['ArrowLeft', 'ArrowRight'].includes(event.key) || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement?.tagName)) return; event.preventDefault(); cursor.setMonth(cursor.getMonth() + (event.key === 'ArrowRight' ? 1 : -1)); render(); });
+    rangeStart.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); selectedDateKey = null; render(); } });
+    rangeEnd.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); render(); } });
+    document.querySelector('#previous-month').addEventListener('click', () => { selectedDateKey = null; cursor.setMonth(cursor.getMonth() - 1); render(); });
+    document.querySelector('#next-month').addEventListener('click', () => { selectedDateKey = null; cursor.setMonth(cursor.getMonth() + 1); render(); });
+    todayButton.addEventListener('click', () => { selectedDateKey = null; cursor = new Date(today.getFullYear(), today.getMonth(), 1); render(); });
+    document.addEventListener('keydown', (event) => { if (monthBar.hidden || !['ArrowLeft', 'ArrowRight'].includes(event.key) || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement?.tagName)) return; event.preventDefault(); selectedDateKey = null; cursor.setMonth(cursor.getMonth() + (event.key === 'ArrowRight' ? 1 : -1)); render(); });
     document.querySelector('#export-ical').addEventListener('click', () => { const exportEvents = visibleEvents().filter(matchesRange); const body = exportEvents.map((event) => `BEGIN:VEVENT\nUID:${event.date}-${event.title.replace(/\s/g, '-')}@miaogroup\nDTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nDTSTART:${new Date(event.date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nSUMMARY:${event.title}\nDESCRIPTION:${event.description || ''}\nLOCATION:${event.location || ''}\nEND:VEVENT`).join('\n'); const blob = new Blob([`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Miao Group//Academic Calendar//EN\n${body}\nEND:VCALENDAR`], { type: 'text/calendar' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'miaogroup-calendar.ics'; link.click(); URL.revokeObjectURL(link.href); });
     render();
     setView(view);
     if (requestedEvent) revealEvent(requestedEvent.id);
+    else if (window.matchMedia('(max-width: 760px)').matches) {
+      requestAnimationFrame(() => calendarToolbar.scrollIntoView({ block: 'start', behavior: 'auto' }));
+    }
   </script>
 </Layout>

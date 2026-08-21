@@ -1,29 +1,14 @@
 # Content guide
 
-Create one Markdown file for every calendar activity and every seminar talk. Set `draft: true` while preparing a record; drafts are not published.
+Create one Markdown file for every calendar activity and seminar talk. Set `draft: true` while preparing a record; drafts are not published.
 
-## Calendar activity
+Use `README-UPDATED.md` for complete YAML templates. Important rules:
 
-Create a file in `src/content/events/` using the calendar activity template in `README-UPDATED.md`.
+- Use `HH:MM-HH:MM` for a time range and `HH:MM` for a start time only.
+- Use single-quoted YAML values when formulas contain backslashes, for example `title: 'Action $I=S/\hbar$'`.
+- `description` is displayed for calendar activities and seminar talks and supports formulas.
+- `references.label` is visible link text. Prefer concise labels such as `arXiv: 2401.12345`, `DOI`, `Slides`, or `Recording`; `url` is optional.
+- `onlineMeeting.label` is always displayed. `url` is optional, and number groups in `copy` are individually copyable.
+- The `series` value in a `seminar-terms` file may contain a formula and becomes the displayed series heading.
 
-- `type`: `group-meeting`, `lecture`, `seminar`, `defense`, or `other`.
-- `date`: required start time. Use `+08:00` for Asia/Shanghai.
-- `endDate`, `time`, `location`, `speaker`, `onlineMeeting`, and `description`: optional.
-- `public`: include the activity in the homepage upcoming section.
-- `draft`: hide the activity from the website and calendar.
-
-## Seminar talk
-
-Create one file in `src/content/seminars/` for each talk.
-
-- `series`: seminar column; matching values are grouped together.
-- `semester`: archive heading within the column.
-- `date`, `speaker`, and `title`: required.
-- `paper`, `references`, `onlineMeeting`, and `recordingUrl`: optional.
-- `draft`: hide the talk from the website and calendar.
-
-## Automatic archive date
-
-Create one file in `src/content/seminar-terms/` with `series`, `semester`, and `archiveAfter`. After that date, the term automatically displays `Archive`. Without a term file, the term is archived after its last scheduled talk.
-
-Use the exact field names and valid URL format shown in `README-UPDATED.md`. Check the date, timezone, speaker name, and links before committing.
+Check the date, timezone, speaker name, and links before committing.

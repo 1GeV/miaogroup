@@ -1,5 +1,5 @@
 ---
-series: "Strings, Fields and Holography Seminar"
+series: 'Strings, Fields and Holography Seminar'
 semester: "2027 Spring"
 archiveAfter: 2027-08-31T23:59:59+08:00
 ---
