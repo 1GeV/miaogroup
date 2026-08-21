@@ -1,19 +1,17 @@
 ---
 series: "Strings, Fields and Holography Seminar"
-semester: "2026 Fall"
-date: 2026-09-18T16:00:00+08:00
-time: "15:00-17:00"
+semester: "2027 Spring"
+date: 2027-03-18T16:00:00+08:00
+time: "16:00-18:00"
 speaker: "Example Speaker"
-title: "Example seminar talk"
+title: "Example spring seminar talk"
 paper: "Example reference paper"
 onlineMeeting: "Zoom Meeting ID: 123 456 789 · Passcode: 2468"
 references:
   - label: "arXiv"
     url: "https://arxiv.org/"
   - label: "Recording"
-    url: "https://zenodo.org/"
-  - label: "Slides"
-    url: "https://www.koushare.com/"
-draft: false
+    url: "https://arxiv.org/"
+draft: True
 ---
 This is a temporary example seminar record.

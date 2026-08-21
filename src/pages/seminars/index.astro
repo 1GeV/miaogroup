@@ -1,11 +1,103 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
-const records = (await getCollection('seminars', ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const semesters = [...new Set(records.map((record) => record.data.semester))];
-const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
+
+const records = (await getCollection('seminars', ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const termSettings = await getCollection('seminarTerms');
+const seriesSettings = await getCollection('seminarSeries', ({ data }) => !data.draft);
+
+const seriesNames = [...new Set(records.map((record) => record.data.series))];
+const seriesGroups = seriesNames.map((series) => {
+  const seriesRecords = records.filter((record) => record.data.series === series);
+  const semesters = [...new Set(seriesRecords.map((record) => record.data.semester))];
+  const settings = seriesSettings.find((setting) => setting.data.series === series)?.data;
+  return {
+    series,
+    description: settings?.description,
+    contact: settings?.contact,
+    links: settings?.links ?? [],
+    terms: semesters.map((semester) => {
+      const termRecords = seriesRecords.filter((record) => record.data.semester === semester);
+      const configuredArchiveDate = termSettings.find((term) => term.data.series === series && term.data.semester === semester)?.data.archiveAfter;
+      const archiveAfter = configuredArchiveDate ?? new Date(Math.max(...termRecords.map((record) => record.data.date.valueOf())));
+      const firstTalkDate = new Date(Math.min(...termRecords.map((record) => record.data.date.valueOf())));
+      const now = new Date();
+      const status = archiveAfter < now ? 'Archive' : firstTalkDate > now ? 'Upcoming term' : 'Current term';
+      return { semester, records: termRecords, archiveAfter, firstTalkDate, status };
+    })
+  };
+});
+
+const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'Asia/Shanghai'
+}).format(date);
+const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
 ---
+
 <Layout title="Seminars">
-  <section class="page-intro"><p class="eyebrow">A shared blackboard</p><h1>Strings, Fields<br /><em>and Holography</em> Seminar</h1><p>Talks and reading conversations across modern high-energy theory.</p></section>
-  {semesters.length ? semesters.map((semester) => <section class="semester-section"><div class="section-heading"><div><p class="eyebrow">{records.find((record) => record.data.semester === semester)?.data.current ? 'Current semester' : 'Archive'}</p><h2>{semester}</h2></div></div><div class="seminar-list">{records.filter((record) => record.data.semester === semester).map((record) => <article class="seminar-card"><div class="seminar-card-date">{formatDate(record.data.date)}</div><div><p class="event-type">{record.data.speaker}</p><h3>{record.data.title}</h3>{record.data.paper && <p class="muted">Reading: {record.data.paper}</p>}{record.data.onlineMeeting && <p class="muted">{record.data.onlineMeeting}</p>}<div class="card-links">{record.data.references.map((reference) => <a href={reference.url} target="_blank" rel="noreferrer">{reference.label} ↗</a>)}{record.data.recordingUrl && <a href={record.data.recordingUrl} target="_blank" rel="noreferrer">Recording ↗</a>}</div></div></article>)}</div></section>) : <div class="archive-empty"><span class="empty-index">01</span><h2>No talks scheduled.</h2></div>}
+  <section class="page-intro">
+    <p class="eyebrow">A shared blackboard</p>
+    <h1>Seminar series</h1>
+    <p>Talks and reading conversations across modern high-energy theory.</p>
+  </section>
+
+  {seriesGroups.length ? seriesGroups.map(({ series, description, contact, links, terms }) => (
+    <section class="semester-section" id={seriesAnchor(series)}>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Seminar</p>
+          <h2>{series}</h2>
+        </div>
+      </div>
+      {(description || contact || links.length) && <div class="series-overview">
+        {description && <p>{description}</p>}
+        {contact && <p class="series-contact">{contact}</p>}
+        {links.length > 0 && <div class="card-links series-links">
+          {links.map((link) => <a href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a>)}
+        </div>}
+      </div>}
+      {terms.map(({ semester, records: termRecords, archiveAfter, firstTalkDate, status }) => (
+        <div class="seminar-term">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow term-status" data-archive-after={archiveAfter.toISOString()} data-first-talk={firstTalkDate.toISOString()}>{status}</p>
+              <h3>{semester}</h3>
+            </div>
+          </div>
+          <div class="seminar-list">
+            {termRecords.map((record) => (
+              <article class="seminar-card">
+                <div class="seminar-card-date">{formatDate(record.data.date)}</div>
+                <div>
+                  <p class="event-type">{record.data.speaker}</p>
+                  <h3>{record.data.title}</h3>
+                  {record.data.time && <p class="muted">Time: {record.data.time}</p>}
+                  {record.data.paper && <p class="muted">Reading: {record.data.paper}</p>}
+                  {record.data.onlineMeeting && <p class="muted">{record.data.onlineMeeting}</p>}
+                  <div class="card-links">
+                    {record.data.references.map((reference) => <a href={reference.url} target="_blank" rel="noreferrer">{reference.label} ↗</a>)}
+                    {record.data.recordingUrl && <a href={record.data.recordingUrl} target="_blank" rel="noreferrer">Recording ↗</a>}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
+  )) : <div class="archive-empty"><span class="empty-index">01</span><h2>No talks scheduled.</h2></div>}
+  <script>
+    document.querySelectorAll('.term-status[data-archive-after]').forEach((status) => {
+      const archiveAfter = status.getAttribute('data-archive-after');
+      const firstTalkDate = status.getAttribute('data-first-talk');
+      if (archiveAfter && firstTalkDate) {
+        const now = new Date();
+        status.textContent = new Date(archiveAfter) < now ? 'Archive' : new Date(firstTalkDate) > now ? 'Upcoming term' : 'Current term';
+      }
+    });
+  </script>
 </Layout>

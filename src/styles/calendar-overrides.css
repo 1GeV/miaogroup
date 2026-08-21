@@ -1,0 +1,20 @@
+.event-row { grid-template-columns:100px minmax(0, 1fr); }
+.event-row::after { content:none; }
+.event-row-link { grid-template-columns:100px minmax(0, 1fr) 30px; cursor:pointer; }
+.event-row-link:hover { background:var(--pale); }
+.event-row-link:focus-visible { outline:2px solid var(--teal); outline-offset:3px; }
+.event-row-link h3 { transition:color .15s ease; }
+.event-row-link:hover h3 { color:var(--blue); }
+.event-row-arrow { color:var(--teal); font-size:20px; justify-self:end; transition:transform .15s ease; }
+.event-row-link:hover .event-row-arrow { transform:translateX(4px); }
+.event-row-highlight { background:var(--pale); }
+.calendar-links { display:flex; flex-wrap:wrap; gap:14px; margin-top:12px; }
+.calendar-links a { color:var(--teal); font-size:12px; font-weight:700; }
+.calendar-event { width:100%; border:0; color:inherit; cursor:pointer; font:inherit; text-align:left; }
+.calendar-event:hover { background:#e1edf3; }
+.calendar-event:focus-visible { outline:2px solid var(--teal); outline-offset:1px; }
+
+@media (max-width:760px) {
+  .event-row { grid-template-columns:70px minmax(0, 1fr); gap:15px; }
+  .event-row-link { grid-template-columns:70px minmax(0, 1fr) 24px; }
+}

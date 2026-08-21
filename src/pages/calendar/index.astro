@@ -4,15 +4,21 @@ import Layout from '../../layouts/Layout.astro';
 const eventEntries = await getCollection('events', ({ data }) => !data.draft);
 const seminarEntries = await getCollection('seminars', ({ data }) => !data.draft);
 const events = [
-  ...eventEntries.map(({ data }) => ({ ...data, endDate: data.endDate })),
-  ...seminarEntries.map(({ data }) => ({
+  ...eventEntries.map(({ id, data }) => ({ id, ...data, endDate: data.endDate })),
+  ...seminarEntries.map(({ id, data }) => ({
+    id: `seminar-${id}`,
     title: data.title,
     type: 'seminar' as const,
     date: data.date,
     endDate: undefined,
+    time: data.time,
     speaker: data.speaker,
     onlineMeeting: data.onlineMeeting,
-    description: data.paper
+    description: data.paper,
+    references: [
+      ...data.references,
+      ...(data.recordingUrl ? [{ label: 'Recording', url: data.recordingUrl }] : [])
+    ]
   }))
 ].sort((a, b) => a.date.valueOf() - b.date.valueOf());
 const serialized = events.map((data) => ({ ...data, date: data.date.toISOString(), endDate: data.endDate?.toISOString() }));
@@ -32,16 +38,24 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     const app = document.querySelector('#calendar-app');
     const events = JSON.parse(app.dataset.events || '[]');
     const labels = JSON.parse(app.dataset.labels || '{}');
-    const baseDate = events.length ? new Date(events[0].date) : new Date();
+    const shanghaiParts = (value) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(value)).reduce((parts, part) => ({ ...parts, [part.type]: part.value }), {});
+    const eventDate = (value) => {
+      const parts = shanghaiParts(value);
+      return new Date(Number(parts.year), Number(parts.month) - 1, Number(parts.day));
+    };
+    const requestedEventId = new URLSearchParams(window.location.search).get('event');
+    const requestedEvent = events.find((event) => event.id === requestedEventId);
+    const baseDate = requestedEvent ? eventDate(requestedEvent.date) : new Date();
     let cursor = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
     let filter = 'all';
-    let view = 'month';
+    let view = requestedEvent ? 'list' : 'month';
     const monthLabel = document.querySelector('#month-label');
     const grid = document.querySelector('#month-grid');
     const list = document.querySelector('#list-items');
     const empty = document.querySelector('#calendar-empty');
     const visibleEvents = () => events.filter((event) => filter === 'all' || event.type === filter);
-    const dateKey = (date) => { const d = new Date(date); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
+    const inCursorMonth = (event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth(); };
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
     const render = () => {
       const filtered = visibleEvents();
       monthLabel.textContent = cursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -52,17 +66,31 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
       for (let index = 0; index < startOffset + days; index++) {
         const day = index - startOffset + 1;
         const cell = document.createElement('div'); cell.className = 'day-cell';
-        if (day > 0) { cell.innerHTML = `<span class="day-number">${day}</span>`; filtered.filter((event) => { const d = new Date(event.date); return d.getFullYear() === cursor.getFullYear() && d.getMonth() === cursor.getMonth() && d.getDate() === day; }).forEach((event) => { const item = document.createElement('div'); item.className = `calendar-event event-${event.type}`; item.innerHTML = `<span>${labels[event.type]}</span><strong>${event.title}</strong>`; cell.append(item); }); } else cell.classList.add('day-cell-empty');
+        if (day > 0) { cell.innerHTML = `<span class="day-number">${day}</span>`; filtered.filter((event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth() && date.getDate() === day; }).forEach((event) => { const item = document.createElement('button'); item.type = 'button'; item.className = `calendar-event event-${event.type}`; item.setAttribute('aria-label', `View ${event.title} in list view`); item.innerHTML = `<span>${escapeHtml(labels[event.type])}</span><strong>${escapeHtml(event.title)}</strong>`; item.addEventListener('click', () => revealEvent(event.id)); cell.append(item); }); } else cell.classList.add('day-cell-empty');
         grid.append(cell);
       }
-      list.innerHTML = filtered.length ? filtered.map((event) => `<article class="event-row"><time datetime="${event.date}"><strong>${new Date(event.date).getDate().toString().padStart(2, '0')}</strong><span>${new Date(event.date).toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${labels[event.type]}</p><h3>${event.title}</h3><p class="muted">${[event.speaker, event.time, event.location, event.onlineMeeting].filter(Boolean).join(' · ') || 'Details to follow'}</p></div><span class="arrow">↗</span></article>`).join('') : '';
-      empty.hidden = filtered.length > 0;
+      const monthlyEvents = filtered.filter(inCursorMonth);
+      list.innerHTML = monthlyEvents.length ? monthlyEvents.map((event) => { const date = eventDate(event.date); const references = (event.references || []).map((reference) => `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${escapeHtml(reference.label)} ↗</a>`).join(''); return `<article class="event-row" id="event-${escapeHtml(event.id)}"><time datetime="${event.date}"><strong>${date.getDate().toString().padStart(2, '0')}</strong><span>${date.toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${labels[event.type]}</p><h3>${escapeHtml(event.title)}</h3><p class="muted">${escapeHtml([event.speaker, event.time, event.location, event.onlineMeeting].filter(Boolean).join(' · ') || 'Details to follow')}</p>${references ? `<div class="calendar-links">${references}</div>` : ''}</div></article>`; }).join('') : '';
+      empty.hidden = monthlyEvents.length > 0;
     };
-    document.querySelectorAll('.view-button').forEach((button) => button.addEventListener('click', () => { view = button.dataset.view; document.querySelectorAll('.view-button').forEach((b) => b.classList.toggle('active', b === button)); document.querySelector('#month-view').hidden = view !== 'month'; document.querySelector('#list-view').hidden = view !== 'list'; }));
+    const setView = (nextView) => { view = nextView; document.querySelectorAll('.view-button').forEach((button) => button.classList.toggle('active', button.dataset.view === view)); document.querySelector('#month-view').hidden = view !== 'month'; document.querySelector('#list-view').hidden = view !== 'list'; };
+    const revealEvent = (eventId) => {
+      setView('list');
+      requestAnimationFrame(() => {
+        const target = document.getElementById(`event-${eventId}`);
+        if (!target) return;
+        target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        target.classList.add('event-row-highlight');
+        window.setTimeout(() => target.classList.remove('event-row-highlight'), 1600);
+      });
+    };
+    document.querySelectorAll('.view-button').forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
     document.querySelector('#type-filter').addEventListener('change', (event) => { filter = event.target.value; render(); });
     document.querySelector('#previous-month').addEventListener('click', () => { cursor.setMonth(cursor.getMonth() - 1); render(); });
     document.querySelector('#next-month').addEventListener('click', () => { cursor.setMonth(cursor.getMonth() + 1); render(); });
     document.querySelector('#export-ical').addEventListener('click', () => { const body = visibleEvents().map((event) => `BEGIN:VEVENT\nUID:${event.date}-${event.title.replace(/\s/g, '-')}@miaogroup\nDTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nDTSTART:${new Date(event.date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nSUMMARY:${event.title}\nDESCRIPTION:${event.description || ''}\nLOCATION:${event.location || ''}\nEND:VEVENT`).join('\n'); const blob = new Blob([`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Miao Group//Academic Calendar//EN\n${body}\nEND:VCALENDAR`], { type: 'text/calendar' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'miaogroup-calendar.ics'; link.click(); URL.revokeObjectURL(link.href); });
     render();
+    setView(view);
+    if (requestedEvent) revealEvent(requestedEvent.id);
   </script>
 </Layout>

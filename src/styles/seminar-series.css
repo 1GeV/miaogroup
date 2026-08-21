@@ -1,0 +1,8 @@
+.series-overview { max-width:690px; margin:-12px 0 38px; padding:18px 0 0; border-top:1px solid var(--line); }
+.series-overview > p:first-child { margin-bottom:8px; color:var(--muted); }
+.series-contact { margin:0; color:var(--ink); font-size:13px; }
+.series-links { margin-top:14px; }
+
+@media (max-width:760px) {
+  .series-overview { margin-bottom:30px; }
+}
