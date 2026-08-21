@@ -1,0 +1,79 @@
+.diagram-field {
+  position: absolute;
+  inset: 42px 4px 52px;
+}
+
+.diagram-boundary {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  left: 65px;
+  top: 0;
+  border: 1px solid #a9bfce;
+  border-radius: 50%;
+}
+
+.diagram-bulk {
+  position: absolute;
+  width: 400px;
+  height: 148px;
+  left: 0;
+  top: 102px;
+  border: 1px solid #a9bfce;
+  border-radius: 50%;
+  transform: rotate(-24deg);
+}
+
+.diagram-geodesic {
+  position: absolute;
+  border-top: 1px solid #7195ae;
+  transform-origin: left center;
+}
+
+.geodesic-one {
+  width: 205px;
+  left: 102px;
+  top: 150px;
+  transform: rotate(-36deg);
+}
+
+.geodesic-two {
+  width: 168px;
+  left: 157px;
+  top: 183px;
+  transform: rotate(27deg);
+}
+
+.diagram-marker {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--teal);
+}
+
+.marker-one { left: 98px; top: 148px; }
+.marker-two { left: 304px; top: 27px; }
+
+.formula-correspondence { left: 20px; top: 82px; }
+.formula-correspondence i { font-style: italic; }
+.formula-correspondence sub { font-size: .68em; font-style: normal; }
+
+.diagram-caption {
+  position: absolute;
+  right: 18px;
+  bottom: 31px;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+}
+
+@media (max-width: 760px) {
+  .diagram-boundary { width: 245px; height: 245px; left: 40px; }
+  .diagram-bulk { width: 330px; left: -12px; top: 75px; }
+  .geodesic-one { left: 70px; top: 124px; }
+  .geodesic-two { left: 117px; top: 151px; }
+  .marker-one { left: 66px; top: 122px; }
+  .marker-two { left: 258px; top: 27px; }
+}

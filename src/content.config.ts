@@ -11,7 +11,7 @@ const events = defineCollection({
     time: z.string().optional(),
     location: z.string().optional(),
     speaker: z.string().optional(),
-    meetingUrl: z.string().url().optional(),
+    onlineMeeting: z.string().optional(),
     description: z.string().optional(),
     draft: z.boolean().default(false)
   })
@@ -27,6 +27,7 @@ const seminars = defineCollection({
     title: z.string(),
     paper: z.string().optional(),
     references: z.array(z.object({ label: z.string(), url: z.string().url() })).default([]),
+    onlineMeeting: z.string().optional(),
     recordingUrl: z.string().url().optional(),
     draft: z.boolean().default(false)
   })
