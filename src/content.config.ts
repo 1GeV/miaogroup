@@ -13,6 +13,7 @@ const events = defineCollection({
     speaker: z.string().optional(),
     onlineMeeting: z.string().optional(),
     description: z.string().optional(),
+    public: z.boolean().default(false),
     draft: z.boolean().default(false)
   })
 });

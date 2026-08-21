@@ -3,8 +3,15 @@ import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 const base = import.meta.env.BASE_URL;
 const events = (await getCollection('events', ({ data }) => !data.draft)).sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
-const upcoming = events.filter((event) => event.data.date >= new Date()).slice(0, 3);
 const seminars = (await getCollection('seminars', ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const nextPublicEvent = events.find((event) => event.data.public && event.data.date >= new Date());
+const nextSeminar = seminars
+  .filter((seminar) => seminar.data.date >= new Date())
+  .sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf())[0];
+const upcoming = [
+  ...(nextPublicEvent ? [nextPublicEvent] : []),
+  ...(nextSeminar ? [{ data: { ...nextSeminar.data, type: 'seminar', location: undefined, public: true } }] : [])
+].sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
 const currentSeminar = seminars.find((seminar) => seminar.data.current) ?? seminars[0];
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
 const typeLabel = (type: string) => type.replace('-', ' ');
@@ -14,33 +21,30 @@ const typeLabel = (type: string) => type.replace('-', ' ');
     <div class="hero-copy">
       <p class="eyebrow">Theoretical physics · Sun Yat-sen University</p>
       <h1>Miao Group</h1>
-      <p class="hero-lede">A working space for conversations around strings, fields, holography, and the geometry of quantum theory.</p>
+      <p class="hero-lede">Research in holography, strings, and quantum gravity.</p>
       <div class="hero-actions">
         <a class="button button-primary" href={`${base}seminars/`}>Explore the seminar <span aria-hidden="true">↗</span></a>
         <a class="text-link" href={`${base}calendar/`}>View academic calendar <span aria-hidden="true">→</span></a>
       </div>
     </div>
     <div class="hero-diagram" aria-hidden="true">
-      <div class="diagram-field">
-        <div class="diagram-boundary-line"></div>
-        <div class="boundary-label">boundary</div>
-        <div class="boundary-operators">
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-        </div>
-        <div class="bulk-network">
-          <span class="network-line line-a"></span>
-          <span class="network-line line-b"></span>
-          <span class="network-line line-c"></span>
-          <span class="network-line line-d"></span>
-          <span class="network-line line-e"></span>
-          <span class="network-line line-f"></span>
-          <span class="network-node node-a"></span>
-          <span class="network-node node-b"></span>
-          <span class="network-node node-c"></span>
-          <span class="network-node node-d"></span>
-          <span class="network-core">bulk</span>
-        </div>
-      </div>
+      <svg class="diagram-svg" viewBox="0 0 520 300" role="presentation">
+        <line class="svg-boundary" x1="42" y1="42" x2="478" y2="42" />
+        <text class="svg-label" x="42" y="24">boundary</text>
+        <g class="svg-operators">
+          <circle cx="75" cy="42" r="5" /><circle cx="150" cy="42" r="5" /><circle cx="225" cy="42" r="5" />
+          <circle cx="295" cy="42" r="5" /><circle cx="370" cy="42" r="5" /><circle cx="445" cy="42" r="5" />
+        </g>
+        <g class="svg-network">
+          <path d="M75 42 Q132 130 238 220" />
+          <path d="M150 42 Q210 112 252 220" />
+          <path d="M370 42 Q310 112 268 220" />
+          <path d="M445 42 Q388 130 282 220" />
+          <circle cx="144.25" cy="130.5" r="5" /><circle cx="205.5" cy="121.5" r="5" />
+          <circle cx="314.5" cy="121.5" r="5" /><circle cx="375.75" cy="130.5" r="5" />
+        </g>
+        <circle class="svg-bulk" cx="260" cy="245" r="28" /><text class="svg-bulk-label" x="260" y="249">bulk</text>
+      </svg>
       <span class="formula formula-correspondence"><i>Z</i><sub>CFT</sub> = <i>Z</i><sub>AdS</sub></span>
       <span class="diagram-caption">boundary &harr; bulk</span>
     </div>

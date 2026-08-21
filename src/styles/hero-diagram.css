@@ -78,6 +78,46 @@
   .marker-two { left: 258px; top: 27px; }
 }
 
+.diagram-svg {
+  position: absolute;
+  inset: 38px 0 28px;
+  width: 100%;
+  height: calc(100% - 66px);
+  overflow: visible;
+}
+
+.svg-boundary,
+.svg-network line {
+  stroke: #a9bfce;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.svg-network line,
+.svg-network path { stroke: #b2c8d5; stroke-linecap: round; fill: none; }
+.svg-operators circle,
+.svg-network circle { fill: var(--paper); stroke: var(--teal); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.svg-label { fill: var(--muted); font-family: var(--serif); font-size: 13px; font-style: italic; }
+.svg-bulk { fill: var(--blue); }
+.svg-bulk-label { fill: white; font-family: var(--serif); font-size: 12px; text-anchor: middle; }
+
+@media (max-width: 760px) {
+  .diagram-svg { inset: 25px 0 20px; height: calc(100% - 45px); }
+}
+
+/* Keep the interior nodes centered on the diagonal network lines. */
+.node-a { left: 46px; top: 56px; }
+.node-b { right: 46px; top: 56px; }
+.node-c { left: 94px; top: 94px; }
+.node-d { right: 94px; top: 94px; }
+
+@media (max-width: 760px) {
+  .node-a { left: 31px; top: 45px; }
+  .node-b { right: 31px; top: 45px; }
+  .node-c { left: 67px; top: 77px; }
+  .node-d { right: 67px; top: 77px; }
+}
+
 /* The diagram uses a boundary-to-bulk network instead of orbital decoration. */
 .hero-diagram {
   border-left: 0;

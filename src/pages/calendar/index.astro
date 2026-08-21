@@ -1,9 +1,22 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
-const events = (await getCollection('events', ({ data }) => !data.draft)).sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
-const serialized = events.map(({ data }) => ({ ...data, date: data.date.toISOString(), endDate: data.endDate?.toISOString() }));
-const labels = { 'group-meeting': 'Group meeting', lecture: 'Lecture', seminar: 'Seminar', defense: 'Defense', other: 'Other' };
+const eventEntries = await getCollection('events', ({ data }) => !data.draft);
+const seminarEntries = await getCollection('seminars', ({ data }) => !data.draft);
+const events = [
+  ...eventEntries.map(({ data }) => ({ ...data, endDate: data.endDate })),
+  ...seminarEntries.map(({ data }) => ({
+    title: data.title,
+    type: 'seminar' as const,
+    date: data.date,
+    endDate: undefined,
+    speaker: data.speaker,
+    onlineMeeting: data.onlineMeeting,
+    description: data.paper
+  }))
+].sort((a, b) => a.date.valueOf() - b.date.valueOf());
+const serialized = events.map((data) => ({ ...data, date: data.date.toISOString(), endDate: data.endDate?.toISOString() }));
+const labels = { 'group-meeting': 'Group meeting', lecture: 'Lecture', seminar: 'Seminar', defense: 'Thesis defense', other: 'Other' };
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
 ---
 <Layout title="Academic calendar">
