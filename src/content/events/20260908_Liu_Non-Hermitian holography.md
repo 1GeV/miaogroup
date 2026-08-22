@@ -8,6 +8,7 @@ location: "Room to be announced"
 speaker: "Hua-Chao Liu"
 # onlineMeeting:
 #   label: "Tencent Meeting"
+#   copy: "Meeting ID: 123 456 789; Passcode: 2468"
 public: false
 # description:
 # references:
