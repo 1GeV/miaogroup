@@ -17,6 +17,5 @@ references:
   - label: "arXiv.2307.09215"
     url: "https://arxiv.org/abs/2307.09215"
 draft: false
-contact: "huzhw23@mail2.sysu.edu.cn"
 ---
 This is a temporary example seminar record.
