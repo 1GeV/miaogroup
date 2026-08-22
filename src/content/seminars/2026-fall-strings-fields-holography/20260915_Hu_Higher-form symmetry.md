@@ -5,7 +5,7 @@ date: 2026-09-15
 # time: "15:00-17:00"
 location: "Room to be announced"
 speaker: "Zhe-Wen Hu"
-title: 'Higher-form Symmetry'
+title: 'Higher-Form Symmetry'
 # paper: "Example reference paper"
 onlineMeeting:
   label: "Tencent Meeting"

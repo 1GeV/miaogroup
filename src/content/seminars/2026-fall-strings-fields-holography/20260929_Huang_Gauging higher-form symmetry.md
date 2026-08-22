@@ -5,7 +5,7 @@ date: 2026-09-29
 # time: "15:00-17:00"
 location: "Room to be announced"
 speaker: "Zhen-Rui Huang"
-title: 'Gauging Higher-form Symmetry'
+title: 'Gauging Higher-Form Symmetry'
 # paper: "Example reference paper"
 onlineMeeting:
   label: "Tencent Meeting"
