@@ -56,6 +56,22 @@ onlineMeeting:
   label: "Tencent Meeting"
 ```
 
+`speaker` can remain a plain string, or include a link such as an ORCID page:
+
+```yaml
+speaker:
+  name: "Speaker Name"
+  url: "https://orcid.org/0000-0000-0000-0000"
+```
+
+Use `name` rather than `label` because this field describes a person; the original plain-text speaker format remains supported.
+
+`contact` is optional for calendar activities and seminar talks. Email addresses and `https://` addresses are rendered as links:
+
+```yaml
+contact: "speaker@example.edu"
+```
+
 Use `description` for a public note about the talk. It is shown on the seminar page and in the academic calendar, and it supports inline formulas:
 
 ```yaml

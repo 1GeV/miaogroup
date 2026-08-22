@@ -3,7 +3,9 @@ series: 'Strings, Fields and Holography Seminar'
 semester: "2026 Fall"
 date: 2026-09-18T16:00:00+08:00
 time: "15:00-17:00"
-speaker: "Example Speaker"
+speaker: 
+  name: "Example Speaker"
+  url: "https://orcid.org/0000-0003-1032-2313"
 title: 'Example seminar talk: $I=S/\hbar$, $Z_{\text{AdS}}=Z_{\text{CFT}}$'
 paper: "Example reference paper"
 onlineMeeting:
@@ -18,6 +20,7 @@ references:
     url: "https://zenodo.org/"
   - label: "Slides"
     url: "https://www.koushare.com/"
+contact: "Email: huzhw23@mail2.sysu.edu.cn"
 draft: true
 ---
 This is a temporary example seminar record.

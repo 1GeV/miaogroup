@@ -27,6 +27,7 @@ const events = [
     time: data.time,
     location: data.location,
     speaker: data.speaker,
+    contact: data.contact,
     onlineMeetings: normalizeOnlineMeetings(data.onlineMeeting),
     description: data.description || data.paper,
     references: [
@@ -89,7 +90,8 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     const list = document.querySelector('#list-items');
     const empty = document.querySelector('#calendar-empty');
     const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    const searchableText = (event) => [event.title, event.speaker, event.location, event.description, ...(event.onlineMeetings || []).flatMap((meeting) => [meeting.label, meeting.url, meeting.copy])].filter(Boolean).join(' ').toLowerCase();
+    const normalizeSpeaker = (value) => typeof value === 'string' ? { name: value } : value?.name ? value : null;
+    const searchableText = (event) => [event.title, normalizeSpeaker(event.speaker)?.name, event.contact, event.location, event.description, ...(event.onlineMeetings || []).flatMap((meeting) => [meeting.label, meeting.url, meeting.copy])].filter(Boolean).join(' ').toLowerCase();
     const visibleEvents = () => events.filter((event) => (filter === 'all' || event.type === filter) && (!searchQuery || searchableText(event).includes(searchQuery)));
     const inCursorMonth = (event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth(); };
     const inputDate = (value) => { const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value); if (!match) return null; const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])); return date.getFullYear() === Number(match[1]) && date.getMonth() === Number(match[2]) - 1 && date.getDate() === Number(match[3]) ? date : null; };
@@ -108,6 +110,18 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     };
     const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
     const renderMathText = (value) => escapeHtml(value).replace(/\$([^$\n]+)\$/g, '\\($1\\)');
+    const renderSpeaker = (value) => {
+      const speaker = normalizeSpeaker(value);
+      if (!speaker) return '';
+      const name = renderMathText(speaker.name);
+      return speaker.url ? `<a class="speaker-link" href="${escapeHtml(speaker.url)}" target="_blank" rel="noreferrer">${name} ↗</a>` : name;
+    };
+    const renderContact = (value) => {
+      if (!value) return '';
+      return escapeHtml(value).replace(/(https?:\/\/[^\s<]+|[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,})/gi, (match) => /^https?:\/\//i.test(match)
+        ? `<a class="contact-link" href="${match}" target="_blank" rel="noreferrer">${match} ↗</a>`
+        : `<a class="contact-link" href="mailto:${match}">${match}</a>`);
+    };
     const pickerMatch = (value, query, numeric = false) => {
       const normalized = query.trim().toLowerCase();
       if (!normalized) return true;
@@ -196,7 +210,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
         grid.append(cell);
       }
       const listEvents = filtered.filter(matchesRange);
-      list.innerHTML = listEvents.length ? listEvents.map((event) => { const date = eventDate(event.date); const references = (event.references || []).map((reference) => reference.url ? `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${renderMathText(reference.label)} ↗</a>` : `<span class="reference-label">${renderMathText(reference.label)}</span>`).join(''); const meetings = renderOnlineMeetings(event.onlineMeetings); const details = [event.speaker, event.time, event.location].filter(Boolean).join(' · '); const detailText = details || (!meetings ? 'Details to follow' : ''); const description = event.description ? `<p class="muted event-description">${renderMathText(event.description)}</p>` : ''; return `<article class="event-row" id="event-${escapeHtml(event.id)}" data-date-key="${dateKey(date)}"><time datetime="${event.date}"><strong>${date.getDate().toString().padStart(2, '0')}</strong><span>${date.toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${escapeHtml(labels[event.type])}</p><h3>${renderMathText(event.title)}</h3><p class="muted event-details">${renderMathText(detailText)}${meetings ? `${detailText ? ' · ' : ''}${meetings}` : ''}</p>${description}${references ? `<div class="calendar-links">${references}</div>` : ''}</div></article>`; }).join('') : '';
+      list.innerHTML = listEvents.length ? listEvents.map((event) => { const date = eventDate(event.date); const references = (event.references || []).map((reference) => reference.url ? `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${renderMathText(reference.label)} ↗</a>` : `<span class="reference-label">${renderMathText(reference.label)}</span>`).join(''); const meetings = renderOnlineMeetings(event.onlineMeetings); const detailParts = [renderSpeaker(event.speaker), event.time && renderMathText(event.time), event.location && renderMathText(event.location), event.contact && renderContact(event.contact)].filter(Boolean); const detailText = detailParts.join(' · '); const detailFallback = detailText || (!meetings ? 'Details to follow' : ''); const description = event.description ? `<p class="muted event-description">${renderMathText(event.description)}</p>` : ''; return `<article class="event-row" id="event-${escapeHtml(event.id)}" data-date-key="${dateKey(date)}"><time datetime="${event.date}"><strong>${date.getDate().toString().padStart(2, '0')}</strong><span>${date.toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${escapeHtml(labels[event.type])}</p><h3>${renderMathText(event.title)}</h3><p class="muted event-details">${detailFallback}${meetings ? `${detailFallback ? ' · ' : ''}${meetings}` : ''}</p>${description}${references ? `<div class="calendar-links">${references}</div>` : ''}</div></article>`; }).join('') : '';
       empty.hidden = listEvents.length > 0;
       typesetCalendar();
     };

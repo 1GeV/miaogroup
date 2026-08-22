@@ -16,6 +16,7 @@ references:
     url: "https://arxiv.org/"
   - label: "Recording"
     url: "https://arxiv.org/"
+contact: "Email: miaorx@mail.sysu.edu.cn"
 draft: true
 ---
 

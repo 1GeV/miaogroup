@@ -16,6 +16,7 @@ date: 2026-09-15T15:00:00+08:00
 time: "15:00-17:00"
 location: "Room 101"
 speaker: "Miao Group"
+contact: "group@example.edu"
 description: 'Discussion of the formula $S_A$.'
 onlineMeeting:
   label: "Tencent Meeting"
@@ -33,6 +34,18 @@ draft: false
 
 `onlineMeeting.label` is always shown. `url` is optional and becomes a link when present. Each number group in `copy` can be clicked to copy only that number group.
 
+`speaker` accepts the original plain-text form or a linked form:
+
+```yaml
+speaker:
+  name: "Speaker Name"
+  url: "https://orcid.org/0000-0000-0000-0000"
+```
+
+`name` is intentional here: `speaker` describes a person, while `label` is used for resources and links. Existing plain-text speaker values remain valid.
+
+`contact` is optional. Email addresses become `mailto:` links and `https://` addresses become external links.
+
 ### Seminar talk
 
 Create one file in `src/content/seminars/` for each talk:
@@ -44,6 +57,7 @@ semester: "2026 Fall"
 date: 2026-09-18T16:00:00+08:00
 time: "15:00-17:00"
 speaker: "Name"
+contact: "speaker@example.edu"
 title: 'Talk title $Z_{CFT}=Z_{AdS}$'
 paper: 'Paper title, Author (2026)'
 description: 'A short note about the talk and the formula $S_A$.'
@@ -60,7 +74,7 @@ draft: false
 ---
 ```
 
-`description` is shown on the seminar page and in the academic calendar. `references.label` is the visible link text; use concise labels such as `arXiv: 2401.12345`, `DOI`, `Slides`, or `Recording`. The URL is optional, so a pending resource can contain only a label. Use `paper` for the paper title and author/year information.
+`description` is shown on the seminar page and in the academic calendar. `references.label` is the visible link text; use concise labels such as `arXiv: 2401.12345`, `DOI`, `Slides`, or `Recording`. The URL is optional, so a pending resource can contain only a label. Use `paper` for the paper title and author/year information. Seminar speakers also accept the linked form shown above, and `contact` works the same way as it does for calendar activities.
 
 ### Automatic archive date
 

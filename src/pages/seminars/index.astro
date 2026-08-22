@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
-import { normalizeOnlineMeetings, renderContact, renderMath, renderMeetingCopy } from '../../lib/content';
+import { renderContact, renderMath, renderOnlineMeetings, renderSpeaker } from '../../lib/content';
 
 const records = (await getCollection('seminars', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
@@ -78,13 +78,14 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
               <article class="seminar-card" id={`talk-${record.id}`}>
                 <div class="seminar-card-date">{formatDate(record.data.date)}</div>
                 <div>
-                  <p class="event-type" set:html={renderMath(record.data.speaker)}></p>
+                  <p class="event-type" set:html={renderSpeaker(record.data.speaker)}></p>
                   <h3 set:html={renderMath(record.data.title)}></h3>
                   {record.data.time && <p class="muted">Time: {record.data.time}</p>}
                   {record.data.location && <p class="muted">Location: {record.data.location}</p>}
+                  {record.data.contact && <p class="muted activity-contact" set:html={renderContact(record.data.contact)}></p>}
                   {record.data.description && <p class="muted" set:html={renderMath(record.data.description)}></p>}
                   {record.data.paper && <p class="muted" set:html={renderMath(`Reading: ${record.data.paper}`)}></p>}
-                  {normalizeOnlineMeetings(record.data.onlineMeeting).length > 0 && <p class="muted meeting-line">{normalizeOnlineMeetings(record.data.onlineMeeting).map((meeting, index) => <>{index > 0 && ' · '}{meeting.url ? <a class="meeting-link" href={meeting.url} target="_blank" rel="noreferrer">{meeting.label} ↗</a> : meeting.copy === meeting.label ? <span set:html={renderMeetingCopy(meeting.copy || meeting.label)} /> : <span class="meeting-label">{meeting.label}</span>}{meeting.copy && meeting.copy !== meeting.label && <> · <span set:html={renderMeetingCopy(meeting.copy)} /></>}</>)}</p>}
+                  {renderOnlineMeetings(record.data.onlineMeeting) && <p class="muted meeting-line" set:html={renderOnlineMeetings(record.data.onlineMeeting)}></p>}
                   <div class="card-links">
                     {record.data.references.map((reference) => reference.url ? <a href={reference.url} target="_blank" rel="noreferrer" set:html={`${renderMath(reference.label)} ↗`}></a> : <span class="reference-label" set:html={renderMath(reference.label)}></span>)}
                     {record.data.recordingUrl && <a href={record.data.recordingUrl} target="_blank" rel="noreferrer">Recording ↗</a>}

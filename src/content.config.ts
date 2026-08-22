@@ -16,6 +16,14 @@ const onlineMeeting = z.union([
   z.array(onlineMeetingEntry)
 ]).optional();
 
+const speaker = z.union([
+  z.string(),
+  z.object({
+    name: z.string(),
+    url: z.string().url().optional()
+  })
+]);
+
 const events = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/events' }),
   schema: z.object({
@@ -25,7 +33,8 @@ const events = defineCollection({
     endDate: z.coerce.date().optional(),
     time: z.string().optional(),
     location: z.string().optional(),
-    speaker: z.string().optional(),
+    speaker: speaker.optional(),
+    contact: z.string().optional(),
     onlineMeeting,
     references: z.array(z.object({ label: z.string(), url: z.string().url().optional() })).default([]),
     description: z.string().optional(),
@@ -42,7 +51,8 @@ const seminars = defineCollection({
     date: z.coerce.date(),
     time: z.string().optional(),
     location: z.string().optional(),
-    speaker: z.string(),
+    speaker,
+    contact: z.string().optional(),
     title: z.string(),
     paper: z.string().optional(),
     description: z.string().optional(),
