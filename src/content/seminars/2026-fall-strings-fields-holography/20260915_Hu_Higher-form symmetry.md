@@ -14,7 +14,7 @@ onlineMeeting:
 #   copy: "Meeting ID: 123 456 789; Passcode: 2468"
 # description:
 references:
-  - label: "arXiv.2307.09215"
+  - label: "arXiv:2307.09215"
     url: "https://arxiv.org/abs/2307.09215"
 draft: false
 ---
