@@ -225,7 +225,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
       });
     };
     document.querySelectorAll('.view-button').forEach((button) => button.addEventListener('click', () => { if (button.dataset.view === 'month') { range = 'month'; selectedDateKey = null; searchQuery = ''; eventSearch.value = ''; document.querySelector('#range-filter').value = 'month'; document.querySelector('#custom-range').hidden = true; } else selectedDateKey = null; setView(button.dataset.view); render(); }));
-    document.querySelector('#range-filter').addEventListener('change', (event) => { range = event.target.value; selectedDateKey = null; searchQuery = ''; eventSearch.value = ''; document.querySelector('#custom-range').hidden = range !== 'custom'; if (range !== 'month') setView('list'); else { setView('month'); updateMonthBar(); } updateSearchVisibility(); render(); });
+    document.querySelector('#range-filter').addEventListener('change', (event) => { range = event.target.value; selectedDateKey = null; searchQuery = ''; eventSearch.value = ''; document.querySelector('#custom-range').hidden = range !== 'custom'; if (range !== 'month') setView('list'); else updateMonthBar(); updateSearchVisibility(); render(); });
     document.querySelector('#type-filter').addEventListener('change', (event) => { filter = event.target.value; render(); });
     eventSearch.addEventListener('input', (event) => { searchQuery = event.target.value.trim().toLowerCase(); render(); });
     const pickerDefinitions = [
@@ -289,8 +289,9 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     render();
     setView(view);
     if (requestedEvent) revealEvent(requestedEvent.id);
-    else if (window.matchMedia('(max-width: 760px)').matches) {
-      requestAnimationFrame(() => calendarToolbar.scrollIntoView({ block: 'start', behavior: 'auto' }));
+    else {
+      const initialTarget = window.matchMedia('(max-width: 760px)').matches ? monthBar : calendarToolbar;
+      requestAnimationFrame(() => initialTarget.scrollIntoView({ block: 'start', behavior: 'auto' }));
     }
   </script>
 </Layout>

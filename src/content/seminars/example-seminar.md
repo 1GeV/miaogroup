@@ -18,6 +18,6 @@ references:
     url: "https://zenodo.org/"
   - label: "Slides"
     url: "https://www.koushare.com/"
-draft: false
+draft: true
 ---
 This is a temporary example seminar record.
