@@ -300,7 +300,92 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     document.querySelector('#next-month').addEventListener('click', () => { selectedDateKey = null; cursor.setMonth(cursor.getMonth() + 1); render(); });
     todayButton.addEventListener('click', () => { selectedDateKey = null; cursor = new Date(today.getFullYear(), today.getMonth(), 1); render(); });
     document.addEventListener('keydown', (event) => { if (monthBar.hidden || !['ArrowLeft', 'ArrowRight'].includes(event.key) || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement?.tagName)) return; event.preventDefault(); selectedDateKey = null; cursor.setMonth(cursor.getMonth() + (event.key === 'ArrowRight' ? 1 : -1)); render(); });
-    document.querySelector('#export-ical').addEventListener('click', () => { const exportEvents = visibleEvents().filter(matchesRange); const body = exportEvents.map((event) => `BEGIN:VEVENT\nUID:${event.date}-${event.title.replace(/\s/g, '-')}@miaogroup\nDTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nDTSTART:${new Date(event.date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}\nSUMMARY:${event.title}\nDESCRIPTION:${event.description || ''}\nLOCATION:${event.location || ''}\nEND:VEVENT`).join('\n'); const blob = new Blob([`BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Miao Group//Academic Calendar//EN\n${body}\nEND:VCALENDAR`], { type: 'text/calendar' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = 'miaogroup-calendar.ics'; link.click(); URL.revokeObjectURL(link.href); });
+    const icalEscape = (value) => String(value).replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/([;,])/g, '\\$1');
+    const icalDate = (date) => `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+    const icalLocalDateTime = (date, hour, minute) => `${icalDate(date)}T${String(hour).padStart(2, '0')}${String(minute).padStart(2, '0')}00`;
+    const icalUtcDateTime = (date) => date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+    const addDays = (date, days) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
+    const parseEventTime = (value) => {
+      const match = /^(\d{1,2}):(\d{2})(?:\s*[-–—]\s*(\d{1,2}):(\d{2}))?$/.exec(String(value || '').trim());
+      if (!match) return null;
+      const startHour = Number(match[1]);
+      const startMinute = Number(match[2]);
+      const endHour = match[3] ? Number(match[3]) : undefined;
+      const endMinute = match[4] ? Number(match[4]) : undefined;
+      const valid = (hour, minute) => hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
+      if (!valid(startHour, startMinute) || (endHour !== undefined && !valid(endHour, endMinute))) return null;
+      return { startHour, startMinute, endHour, endMinute, hasEnd: endHour !== undefined && endMinute !== undefined };
+    };
+    const foldIcalLine = (line) => {
+      const chunks = [];
+      let current = '';
+      for (const character of line) {
+        if (current.length >= 75) {
+          chunks.push(current);
+          current = ` ${character}`;
+        } else current += character;
+      }
+      if (current) chunks.push(current);
+      return chunks.join('\r\n');
+    };
+    const serializeIcalEvent = (event) => {
+      const startDay = eventDate(event.date);
+      const parsedTime = parseEventTime(event.time);
+      const lines = [
+        'BEGIN:VEVENT',
+        `UID:${encodeURIComponent(String(event.id))}@miaogroup`,
+        `DTSTAMP:${icalUtcDateTime(new Date())}`
+      ];
+      if (!parsedTime) {
+        const configuredEndDay = event.endDate ? eventDate(event.endDate) : startDay;
+        const endDay = configuredEndDay >= startDay ? configuredEndDay : startDay;
+        lines.push(`DTSTART;VALUE=DATE:${icalDate(startDay)}`);
+        lines.push(`DTEND;VALUE=DATE:${icalDate(addDays(endDay, 1))}`);
+      } else {
+        lines.push(`DTSTART;TZID=Asia/Shanghai:${icalLocalDateTime(startDay, parsedTime.startHour, parsedTime.startMinute)}`);
+        if (parsedTime.hasEnd) {
+          const configuredEndDay = event.endDate ? eventDate(event.endDate) : startDay;
+          const endDay = configuredEndDay >= startDay ? configuredEndDay : startDay;
+          lines.push(`DTEND;TZID=Asia/Shanghai:${icalLocalDateTime(endDay, parsedTime.endHour, parsedTime.endMinute)}`);
+        }
+      }
+      lines.push(`SUMMARY:${icalEscape(event.title)}`);
+      if (event.description) lines.push(`DESCRIPTION:${icalEscape(event.description)}`);
+      if (event.location) lines.push(`LOCATION:${icalEscape(event.location)}`);
+      if (event.type && labels[event.type]) lines.push(`CATEGORIES:${icalEscape(labels[event.type])}`);
+      lines.push('END:VEVENT');
+      return lines.map(foldIcalLine).join('\r\n');
+    };
+    document.querySelector('#export-ical').addEventListener('click', () => {
+      const exportEvents = visibleEvents().filter(matchesRange);
+      const calendarLines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Miao Group//Academic Calendar//EN',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:Miao Group Academic Calendar',
+        'X-WR-TIMEZONE:Asia/Shanghai',
+        'BEGIN:VTIMEZONE',
+        'TZID:Asia/Shanghai',
+        'X-LIC-LOCATION:Asia/Shanghai',
+        'BEGIN:STANDARD',
+        'TZOFFSETFROM:+0800',
+        'TZOFFSETTO:+0800',
+        'TZNAME:CST',
+        'DTSTART:19700101T000000',
+        'END:STANDARD',
+        'END:VTIMEZONE',
+        ...exportEvents.map(serializeIcalEvent),
+        'END:VCALENDAR'
+      ];
+      const blob = new Blob([`${calendarLines.join('\r\n')}\r\n`], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'miaogroup-calendar.ics';
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
     render();
     setView(view);
     if (requestedEvent) revealEvent(requestedEvent.id);

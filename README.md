@@ -34,6 +34,8 @@ draft: false
 
 `onlineMeeting.label` is always shown. `url` is optional and becomes a link when present. Each number group in `copy` can be clicked to copy only that number group.
 
+`Export iCal` exports the activities currently visible after the selected date range, type filter, and search filter. An activity without `time` is exported as an all-day event. `time: "15:00-17:00"` exports a timed event in `Asia/Shanghai`; `time: "15:00"` exports only a start time.
+
 `speaker` accepts the original plain-text form or a linked form:
 
 ```yaml
