@@ -41,6 +41,7 @@ const seminars = defineCollection({
     semester: z.string(),
     date: z.coerce.date(),
     time: z.string().optional(),
+    location: z.string().optional(),
     speaker: z.string(),
     title: z.string(),
     paper: z.string().optional(),

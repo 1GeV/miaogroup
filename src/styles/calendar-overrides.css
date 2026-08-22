@@ -92,8 +92,10 @@
   .calendar-search { width:100%; max-width:none; align-items:stretch; flex-direction:column; gap:5px; }
   .calendar-search input { width:100%; }
   .calendar-legend { display:flex; flex-wrap:wrap; justify-content:center; gap:8px 14px; padding:0 0 14px; }
+  .day-cell { min-height:0; aspect-ratio:1; padding:6px; }
   .day-cell:not(.day-cell-empty) { cursor:pointer; display:flex; align-content:flex-start; align-items:flex-start; flex-wrap:wrap; gap:5px; }
   .day-cell:not(.day-cell-empty) .day-number { flex:0 0 100%; width:100%; }
+  .day-cell.is-today .day-number { flex:0 0 26px; width:26px; height:26px; margin-bottom:5px; }
   .calendar-event { flex:0 0 9px; width:9px; height:9px; min-width:9px; margin:0; padding:0; border:0; border-radius:50%; overflow:visible; }
   .calendar-event span, .calendar-event strong { display:none; }
   .calendar-event.event-group-meeting { background:#4f78a8; }

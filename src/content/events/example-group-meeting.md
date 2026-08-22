@@ -8,8 +8,6 @@ location: "Room to be announced"
 speaker: "Miao Group"
 onlineMeeting:
   label: "Tencent Meeting"
-  # url: "https://meeting.tencent.com/dm/example"
-  # copy: "Meeting ID: 123 456 789; Passcode: 2468"
 public: false
 description: 'Example calendar entry. Delete this file when real events are available. $\xi_1^{\mu}$'
 references:

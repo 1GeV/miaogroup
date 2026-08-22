@@ -74,7 +74,7 @@ const typeLabel = (type: string) => type.replace('-', ' ');
         ? `${base}seminars/#talk-${entry.id}`
         : `${base}calendar/?event=${encodeURIComponent(entry.id)}`;
       const meetings = normalizeOnlineMeetings(data.onlineMeeting);
-      const details = [data.speaker, data.time, kind === 'event' && data.location].filter(Boolean) as string[];
+      const details = [data.speaker, data.time, data.location].filter(Boolean) as string[];
       return <a class="event-row event-row-link" href={href} aria-label={`View ${data.title}`}><time datetime={data.date.toISOString()}><strong>{data.date.getDate().toString().padStart(2, '0')}</strong><span>{formatDate(data.date).split(' ')[0]}</span></time><div><p class="event-type">{typeLabel(kind === 'seminar' ? 'seminar' : data.type)}</p><h3 set:html={renderMath(data.title)}></h3><p class="muted">{details.map((detail, index) => <>{index > 0 && ' · '}{detail}</>)}{meetings.length > 0 && <>{details.length > 0 && ' · '}{meetings.map((meeting, index) => <>{index > 0 && ' · '}<span class="meeting-link">{meeting.label}</span>{meeting.copy && ' · '}{meeting.copy && <span set:html={renderMeetingCopy(meeting.copy)} />}</>)}</>}</p></div><span class="event-row-arrow" aria-hidden="true">→</span></a>;
     })}</div>
   </section>}

@@ -48,6 +48,14 @@ references:
 
 `label` is the visible link text. Prefer a concise resource label, such as `arXiv: 2401.12345`, `DOI`, `Slides`, or `Recording`. Use the talk's `paper` field for the paper title; add the author and year there when useful.
 
+Talks may also include an optional `location` field. Both calendar activities and seminar talks accept an `onlineMeeting` with only a `label`; `url` and `copy` are optional. This works for all activity types, not only seminars:
+
+```yaml
+location: "Room 101"
+onlineMeeting:
+  label: "Tencent Meeting"
+```
+
 Use `description` for a public note about the talk. It is shown on the seminar page and in the academic calendar, and it supports inline formulas:
 
 ```yaml
