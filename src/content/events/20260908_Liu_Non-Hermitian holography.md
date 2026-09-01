@@ -3,8 +3,8 @@ title: 'Non-Hermitian Holography'
 type: group-meeting
 date: 2026-09-08
 # endDate: 2026-08-22T17:00:00+08:00
-# time: "15:00-17:00"
-location: "Room to be announced"
+time: "19:30-21:00"
+location: "Room B330, Hanlin Building 3"
 speaker: "Hua-Chao Liu"
 # onlineMeeting:
 #   label: "Tencent Meeting"
