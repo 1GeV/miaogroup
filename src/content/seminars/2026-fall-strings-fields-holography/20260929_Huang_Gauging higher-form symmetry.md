@@ -14,6 +14,6 @@ onlineMeeting:
 references:
   - label: "arXiv:2307.09215"
     url: "https://arxiv.org/abs/2307.09215"
-draft: false
+draft: true
 ---
 This is a temporary example seminar record.

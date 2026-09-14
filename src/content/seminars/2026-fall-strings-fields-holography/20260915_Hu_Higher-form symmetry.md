@@ -2,15 +2,15 @@
 series: 'Strings, Fields and Holography Seminar'
 semester: "2026 Fall"
 date: 2026-09-15
-# time: "15:00-17:00"
-location: "Room to be announced"
+time: "19:30-21:00"
+location: "Room B201, Hanlin Building 3"
 speaker:
   name: "Zhe-Wen Hu"
   url: "https://orcid.org/0009-0001-9944-0561"
 title: 'Higher-Form Symmetry'
 # paper: "Example reference paper"
-onlineMeeting:
-  label: "Tencent Meeting"
+# onlineMeeting:
+#   label: "Tencent Meeting"
 #   copy: "Meeting ID: 123 456 789; Passcode: 2468"
 # description:
 references:
