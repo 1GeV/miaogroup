@@ -18,4 +18,3 @@ references:
     url: "https://arxiv.org/abs/2307.09215"
 draft: false
 ---
-This is a temporary example seminar record.

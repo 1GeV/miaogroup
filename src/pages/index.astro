@@ -14,18 +14,22 @@ const scheduleFor = (entry: { data: { date: Date; time?: string; endDate?: Date 
   return { start, end };
 };
 const now = new Date();
-const nextPublicEvent = events
+const publicUpcomingEvents = events
   .filter((event) => event.data.public)
   .map((entry) => ({ entry, schedule: scheduleFor(entry) }))
   .filter(({ schedule }) => schedule.start >= now || Boolean(schedule.end && schedule.end > now))
-  .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf())[0];
-const nextSeminar = seminars
+  .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
+const upcomingSeminars = seminars
   .map((entry) => ({ entry, schedule: scheduleFor(entry) }))
   .filter(({ schedule }) => schedule.start >= now || Boolean(schedule.end && schedule.end > now))
-  .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf())[0];
+  .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
+const allUpcoming = [
+  ...publicUpcomingEvents.map(({ entry, schedule }) => ({ kind: 'event' as const, entry, schedule })),
+  ...upcomingSeminars.map(({ entry, schedule }) => ({ kind: 'seminar' as const, entry, schedule }))
+].sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
 const upcoming = [
-  ...(nextPublicEvent ? [{ kind: 'event' as const, entry: nextPublicEvent.entry, schedule: nextPublicEvent.schedule }] : []),
-  ...(nextSeminar ? [{ kind: 'seminar' as const, entry: nextSeminar.entry, schedule: nextSeminar.schedule }] : [])
+  ...(publicUpcomingEvents[0] ? [{ kind: 'event' as const, ...publicUpcomingEvents[0] }] : []),
+  ...(upcomingSeminars[0] ? [{ kind: 'seminar' as const, ...upcomingSeminars[0] }] : [])
 ].sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
 const currentSeminar = seminars
   .map((entry) => ({ entry, schedule: scheduleFor(entry) }))
@@ -67,15 +71,16 @@ const typeLabel = (type: string) => type.replace('-', ' ');
     </div>
   </section>
 
-  {upcoming.length > 0 && <section class="section-block" aria-labelledby="upcoming-title">
+  {allUpcoming.length > 0 && <section class="section-block" aria-labelledby="upcoming-title">
     <div class="section-heading"><div><p class="eyebrow">The next horizon</p><div class="upcoming-heading"><h2 id="upcoming-title">Upcoming academic activity</h2>{upcoming[0] && <span class="upcoming-countdown" data-start={upcoming[0].schedule.start.toISOString()} data-end={upcoming[0].schedule.end?.toISOString() || ''}>Loading…</span>}</div></div><a class="text-link" href={`${base}calendar/`}>Full calendar <span aria-hidden="true">→</span></a></div>
-    <div class="event-list">{upcoming.map(({ kind, entry, schedule }) => {
+    <div class="event-list">{allUpcoming.map(({ kind, entry, schedule }) => {
       const { data } = entry;
       const href = kind === 'seminar'
         ? `${base}seminars/#talk-${entry.id}`
         : `${base}calendar/?event=${encodeURIComponent(entry.id)}`;
       const meetings = normalizeOnlineMeetings(data.onlineMeeting);
-      return <article class="event-row event-row-link" data-start={schedule.start.toISOString()} data-end={schedule.end?.toISOString() || ''} data-href={href} tabindex="0" role="link" aria-label={`View ${data.title}`}><time datetime={data.date.toISOString()}><strong>{data.date.getDate().toString().padStart(2, '0')}</strong><span>{formatDate(data.date).split(' ')[0]}</span></time><div><p class="event-type">{typeLabel(kind === 'seminar' ? 'seminar' : data.type)}</p><h3 set:html={renderMath(data.title)}></h3><p class="muted">{data.speaker && <span set:html={renderSpeaker(data.speaker)} />}{data.speaker && (data.time || data.location || data.contact || meetings.length > 0) && ' · '}{data.time}{data.time && (data.location || data.contact || meetings.length > 0) && ' · '}{data.location}{data.location && (data.contact || meetings.length > 0) && ' · '}{data.contact && <span set:html={renderContact(data.contact)} />}{data.contact && meetings.length > 0 && ' · '}{meetings.map((meeting, index) => <>{index > 0 && ' · '}{meeting.url ? <a class="meeting-link" href={meeting.url} target="_blank" rel="noreferrer">{meeting.label} ↗</a> : <span class="meeting-link">{meeting.label}</span>}{meeting.copy && ' · '}{meeting.copy && <span set:html={renderMeetingCopy(meeting.copy)} />}</>)}</p></div><span class="event-row-arrow" aria-hidden="true">→</span></article>;
+      const visible = upcoming.some((item) => item.kind === kind && item.entry.id === entry.id);
+      return <article class="event-row event-row-link" data-kind={kind} data-start={schedule.start.toISOString()} data-end={schedule.end?.toISOString() || ''} data-href={href} tabindex="0" role="link" aria-label={`View ${data.title}`} hidden={!visible}><time datetime={data.date.toISOString()}><strong>{data.date.getDate().toString().padStart(2, '0')}</strong><span>{formatDate(data.date).split(' ')[0]}</span></time><div><p class="event-type">{typeLabel(kind === 'seminar' ? 'seminar' : data.type)}</p><h3 set:html={renderMath(data.title)}></h3><p class="muted">{data.speaker && <span set:html={renderSpeaker(data.speaker)} />}{data.speaker && (data.time || data.location || data.contact || meetings.length > 0) && ' · '}{data.time}{data.time && (data.location || data.contact || meetings.length > 0) && ' · '}{data.location}{data.location && (data.contact || meetings.length > 0) && ' · '}{data.contact && <span set:html={renderContact(data.contact)} />}{data.contact && meetings.length > 0 && ' · '}{meetings.map((meeting, index) => <>{index > 0 && ' · '}{meeting.url ? <a class="meeting-link" href={meeting.url} target="_blank" rel="noreferrer">{meeting.label} ↗</a> : <span class="meeting-link">{meeting.label}</span>}{meeting.copy && ' · '}{meeting.copy && <span set:html={renderMeetingCopy(meeting.copy)} />}</>)}</p></div><span class="event-row-arrow" aria-hidden="true">→</span></article>;
     })}</div>
   </section>}
 
@@ -90,19 +95,33 @@ const typeLabel = (type: string) => type.replace('-', ' ');
       row.addEventListener('keydown', (event) => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); go(); } });
     });
     const upcomingSection = document.querySelector('[aria-labelledby="upcoming-title"]');
-    document.querySelectorAll('.event-row-link[data-start]').forEach((row) => {
-      const end = row.dataset.end ? new Date(row.dataset.end).getTime() : new Date(row.dataset.start).getTime();
-      if (Date.now() >= end) row.remove();
-    });
-    if (upcomingSection && !upcomingSection.querySelector('.event-row-link')) upcomingSection.remove();
-    const countdown = document.querySelector('.upcoming-countdown');
+    const refreshUpcoming = () => {
+      const candidates = [...document.querySelectorAll('.event-row-link[data-start]')];
+      const nextByKind = new Map();
+      candidates.forEach((row) => {
+        const expires = row.dataset.end ? new Date(row.dataset.end).getTime() : new Date(row.dataset.start).getTime();
+        if (Date.now() < expires && !nextByKind.has(row.dataset.kind)) nextByKind.set(row.dataset.kind, row);
+      });
+      candidates.forEach((row) => { row.hidden = nextByKind.get(row.dataset.kind) !== row; });
+      const visibleRows = candidates.filter((row) => !row.hidden);
+      if (upcomingSection && !visibleRows.length) upcomingSection.remove();
+      return visibleRows.sort((a, b) => new Date(a.dataset.start).getTime() - new Date(b.dataset.start).getTime());
+    };
     const updateCountdown = () => {
+      const visibleRows = refreshUpcoming();
+      const countdown = document.querySelector('.upcoming-countdown');
       if (!countdown) return;
+      if (!visibleRows.length) return;
+      const firstRow = visibleRows[0];
+      if (firstRow) {
+        countdown.dataset.start = firstRow.dataset.start || '';
+        countdown.dataset.end = firstRow.dataset.end || '';
+      }
       const start = new Date(countdown.dataset.start);
       const end = countdown.dataset.end ? new Date(countdown.dataset.end) : null;
       const remaining = start.getTime() - Date.now();
       if (remaining <= 0 && end && Date.now() < end.getTime()) { countdown.textContent = 'In progress'; return; }
-      if (remaining <= 0) { countdown.textContent = remaining > -60000 ? 'Starting now' : 'Started'; return; }
+      if (remaining <= 0) { countdown.textContent = 'Started'; return; }
       const minutes = Math.floor(remaining / 60000);
       const hours = Math.floor(minutes / 60);
       const days = Math.floor(hours / 24);
@@ -116,6 +135,10 @@ const typeLabel = (type: string) => type.replace('-', ' ');
     window.setInterval(updateCountdown, 30000);
   </script>
 </Layout>
+
+<style>
+  .event-row-link[hidden] { display: none !important; }
+</style>
 
 
 
