@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import { renderContact, renderMath, renderOnlineMeetings, renderSpeaker } from '../../lib/content';
+import { scheduleFor } from '../../lib/schedule';
 
 const records = (await getCollection('seminars', ({ data }) => !data.draft))
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
@@ -9,6 +10,7 @@ const termSettings = await getCollection('seminarTerms');
 const seriesSettings = await getCollection('seminarSeries', ({ data }) => !data.draft);
 const seriesKey = (value: string) => value.replace(/\$[^$\n]*\$/g, '').replace(/\s+/g, ' ').trim();
 const matchingSeries = (value: string, candidate: string) => value === candidate || seriesKey(value) === seriesKey(candidate);
+const now = new Date();
 
 const seriesNames = [...new Set(records.map((record) => record.data.series))];
 const seriesGroups = seriesNames.map((series) => {
@@ -24,10 +26,10 @@ const seriesGroups = seriesNames.map((series) => {
     links: settings?.links ?? [],
     terms: semesters.map((semester) => {
       const termRecords = seriesRecords.filter((record) => record.data.semester === semester);
+      const termSchedules = termRecords.map((record) => scheduleFor(record.data));
       const configuredArchiveDate = termSetting(semester)?.data.archiveAfter;
-      const archiveAfter = configuredArchiveDate ?? new Date(Math.max(...termRecords.map((record) => record.data.date.valueOf())));
-      const firstTalkDate = new Date(Math.min(...termRecords.map((record) => record.data.date.valueOf())));
-      const now = new Date();
+      const archiveAfter = configuredArchiveDate ?? new Date(Math.max(...termSchedules.map((schedule) => (schedule.end ?? schedule.start).valueOf())));
+      const firstTalkDate = new Date(Math.min(...termSchedules.map((schedule) => schedule.start.valueOf())));
       const status = archiveAfter < now ? 'Archive' : firstTalkDate > now ? 'Upcoming term' : 'Current term';
       return { semester, records: termRecords, archiveAfter, firstTalkDate, status };
     })

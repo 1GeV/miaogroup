@@ -64,7 +64,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     const today = eventDate(new Date().toISOString());
     const requestedEventId = new URLSearchParams(window.location.search).get('event');
     const requestedEvent = events.find((event) => event.id === requestedEventId);
-    const baseDate = requestedEvent ? eventDate(requestedEvent.date) : new Date();
+    const baseDate = requestedEvent ? eventDate(requestedEvent.date) : today;
     let cursor = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
     let filter = 'all';
     let searchQuery = '';
@@ -138,14 +138,14 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
       const matches = values.filter((value) => pickerMatch(value, query, numeric));
       if (!matches.length) return null;
       if (!numeric) return matches[0];
-      const currentYear = new Date().getFullYear();
+      const currentYear = today.getFullYear();
       return [...matches].sort((a, b) => Math.abs(Number(a) - currentYear) - Math.abs(Number(b) - currentYear) || Number(a) - Number(b))[0];
     };
     const yearOptions = () => [...new Set([
-      new Date().getFullYear(),
+      today.getFullYear(),
       cursor.getFullYear(),
       ...events.map((event) => eventDate(event.date).getFullYear()),
-      ...Array.from({ length: 11 }, (_, index) => new Date().getFullYear() - 5 + index)
+      ...Array.from({ length: 11 }, (_, index) => today.getFullYear() - 5 + index)
     ])].filter((year) => year >= 1900 && year <= 2100).sort((a, b) => a - b).map(String);
     const renderPickerMenu = (input, menu, values, numeric = false) => {
       const query = input.value;

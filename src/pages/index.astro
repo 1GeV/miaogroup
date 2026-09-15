@@ -2,26 +2,19 @@
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import { normalizeOnlineMeetings, renderContact, renderMath, renderMeetingCopy, renderSpeaker } from '../lib/content';
+import { isCurrentOrUpcoming, scheduleFor } from '../lib/schedule';
 const base = import.meta.env.BASE_URL;
 const events = (await getCollection('events', ({ data }) => !data.draft)).sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf());
 const seminars = (await getCollection('seminars', ({ data }) => !data.draft)).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const scheduleFor = (entry: { data: { date: Date; time?: string; endDate?: Date } }) => {
-  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(entry.data.date).reduce((result, part) => ({ ...result, [part.type]: part.value }), {} as Record<string, string>);
-  const times = entry.data.time?.match(/(\d{1,2}):(\d{2})(?:\s*[-–—]\s*(\d{1,2}):(\d{2}))?/);
-  const makeTime = (hour: string, minute: string) => new Date(`${parts.year}-${parts.month}-${parts.day}T${hour.padStart(2, '0')}:${minute}:00+08:00`);
-  const start = times ? makeTime(times[1], times[2]) : new Date(entry.data.date);
-  const end = times?.[4] ? makeTime(times[3], times[4]) : undefined;
-  return { start, end };
-};
 const now = new Date();
 const publicUpcomingEvents = events
   .filter((event) => event.data.public)
-  .map((entry) => ({ entry, schedule: scheduleFor(entry) }))
-  .filter(({ schedule }) => schedule.start >= now || Boolean(schedule.end && schedule.end > now))
+  .map((entry) => ({ entry, schedule: scheduleFor(entry.data) }))
+  .filter(({ schedule }) => isCurrentOrUpcoming(schedule, now))
   .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
 const upcomingSeminars = seminars
-  .map((entry) => ({ entry, schedule: scheduleFor(entry) }))
-  .filter(({ schedule }) => schedule.start >= now || Boolean(schedule.end && schedule.end > now))
+  .map((entry) => ({ entry, schedule: scheduleFor(entry.data) }))
+  .filter(({ schedule }) => isCurrentOrUpcoming(schedule, now))
   .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
 const allUpcoming = [
   ...publicUpcomingEvents.map(({ entry, schedule }) => ({ kind: 'event' as const, entry, schedule })),
@@ -31,11 +24,17 @@ const upcoming = [
   ...(publicUpcomingEvents[0] ? [{ kind: 'event' as const, ...publicUpcomingEvents[0] }] : []),
   ...(upcomingSeminars[0] ? [{ kind: 'seminar' as const, ...upcomingSeminars[0] }] : [])
 ].sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
-const currentSeminar = seminars
-  .map((entry) => ({ entry, schedule: scheduleFor(entry) }))
-  .filter(({ schedule }) => schedule.start >= now || Boolean(schedule.end && schedule.end > now))
-  .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf())[0]?.entry ?? seminars[0];
+const seminarSchedules = seminars
+  .map((entry) => ({ entry, schedule: scheduleFor(entry.data) }))
+  .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
+const currentSeminar = seminarSchedules.find(({ schedule }) => schedule.start <= now && Boolean(schedule.end && schedule.end > now));
+const nextSeminar = seminarSchedules.find(({ schedule }) => schedule.start > now);
+const latestSeminar = [...seminarSchedules].reverse().find(({ schedule }) => schedule.start <= now);
+const featuredSeminar = currentSeminar ?? nextSeminar ?? latestSeminar;
+const featuredSeminarLabel = currentSeminar ? 'Current seminar' : nextSeminar ? 'Next seminar' : latestSeminar ? 'Latest seminar' : 'Seminar series';
+const featuredSeminarHref = featuredSeminar ? `${base}seminars/#talk-${featuredSeminar.entry.id}` : `${base}seminars/`;
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
+const formatDay = (date: Date) => new Intl.DateTimeFormat('en-US', { day: '2-digit', timeZone: 'Asia/Shanghai' }).format(date);
 const typeLabel = (type: string) => type.replace('-', ' ');
 ---
 <Layout title="Home">
@@ -80,13 +79,13 @@ const typeLabel = (type: string) => type.replace('-', ' ');
         : `${base}calendar/?event=${encodeURIComponent(entry.id)}`;
       const meetings = normalizeOnlineMeetings(data.onlineMeeting);
       const visible = upcoming.some((item) => item.kind === kind && item.entry.id === entry.id);
-      return <article class="event-row event-row-link" data-kind={kind} data-start={schedule.start.toISOString()} data-end={schedule.end?.toISOString() || ''} data-href={href} tabindex="0" role="link" aria-label={`View ${data.title}`} hidden={!visible}><time datetime={data.date.toISOString()}><strong>{data.date.getDate().toString().padStart(2, '0')}</strong><span>{formatDate(data.date).split(' ')[0]}</span></time><div><p class="event-type">{typeLabel(kind === 'seminar' ? 'seminar' : data.type)}</p><h3 set:html={renderMath(data.title)}></h3><p class="muted">{data.speaker && <span set:html={renderSpeaker(data.speaker)} />}{data.speaker && (data.time || data.location || data.contact || meetings.length > 0) && ' · '}{data.time}{data.time && (data.location || data.contact || meetings.length > 0) && ' · '}{data.location}{data.location && (data.contact || meetings.length > 0) && ' · '}{data.contact && <span set:html={renderContact(data.contact)} />}{data.contact && meetings.length > 0 && ' · '}{meetings.map((meeting, index) => <>{index > 0 && ' · '}{meeting.url ? <a class="meeting-link" href={meeting.url} target="_blank" rel="noreferrer">{meeting.label} ↗</a> : <span class="meeting-link">{meeting.label}</span>}{meeting.copy && ' · '}{meeting.copy && <span set:html={renderMeetingCopy(meeting.copy)} />}</>)}</p></div><span class="event-row-arrow" aria-hidden="true">→</span></article>;
+      return <article class="event-row event-row-link" data-kind={kind} data-start={schedule.start.toISOString()} data-end={schedule.end?.toISOString() || ''} data-href={href} tabindex="0" role="link" aria-label={`View ${data.title}`} hidden={!visible}><time datetime={data.date.toISOString()}><strong>{formatDay(data.date)}</strong><span>{formatDate(data.date).split(' ')[0]}</span></time><div><p class="event-type">{typeLabel(kind === 'seminar' ? 'seminar' : data.type)}</p><h3 set:html={renderMath(data.title)}></h3><p class="muted">{data.speaker && <span set:html={renderSpeaker(data.speaker)} />}{data.speaker && (data.time || data.location || data.contact || meetings.length > 0) && ' · '}{data.time}{data.time && (data.location || data.contact || meetings.length > 0) && ' · '}{data.location}{data.location && (data.contact || meetings.length > 0) && ' · '}{data.contact && <span set:html={renderContact(data.contact)} />}{data.contact && meetings.length > 0 && ' · '}{meetings.map((meeting, index) => <>{index > 0 && ' · '}{meeting.url ? <a class="meeting-link" href={meeting.url} target="_blank" rel="noreferrer">{meeting.label} ↗</a> : <span class="meeting-link">{meeting.label}</span>}{meeting.copy && ' · '}{meeting.copy && <span set:html={renderMeetingCopy(meeting.copy)} />}</>)}</p></div><span class="event-row-arrow" aria-hidden="true">→</span></article>;
     })}</div>
   </section>}
 
   <section class="seminar-banner section-grid">
     <div><p class="eyebrow">A recurring conversation</p><h2>Strings, Fields<br /><em>and Holography</em><br />Seminar</h2></div>
-    <div class="seminar-summary">{currentSeminar ? <><p class="event-type">Next seminar · {currentSeminar.data.semester}</p><h3 set:html={renderMath(currentSeminar.data.title)}></h3><p class="muted"><span set:html={renderSpeaker(currentSeminar.data.speaker)} /> · {formatDate(currentSeminar.data.date)}{currentSeminar.data.time && <> · {currentSeminar.data.time}</>}</p></> : <><p class="event-type">Seminar series</p><h3>Talks to be announced.</h3></>}<a class="button button-light" href={`${base}seminars/`}>Enter the archive <span aria-hidden="true">↗</span></a></div>
+    <div class="seminar-summary">{featuredSeminar ? <><p class="event-type">{featuredSeminarLabel}</p><h3 set:html={renderMath(featuredSeminar.entry.data.title)}></h3><p class="muted"><span set:html={renderSpeaker(featuredSeminar.entry.data.speaker)} /> · {formatDate(featuredSeminar.entry.data.date)}{featuredSeminar.entry.data.time && <> · {featuredSeminar.entry.data.time}</>}</p></> : <><p class="event-type">Seminar series</p><h3>Talks to be announced.</h3></>}<a class="button button-light" href={featuredSeminarHref}>Enter the archive <span aria-hidden="true">↗</span></a></div>
   </section>
   <script>
     document.querySelectorAll('.event-row-link[data-href]').forEach((row) => {

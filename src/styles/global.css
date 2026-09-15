@@ -4,6 +4,7 @@
 .upcoming-heading { display:flex; align-items:baseline; gap:16px; flex-wrap:wrap; }
 .upcoming-heading h2 { margin-bottom:0; }
 .upcoming-countdown { color:var(--teal); font-size:12px; font-weight:700; letter-spacing:.04em; white-space:nowrap; }
+.seminar-banner .seminar-summary .event-type { color:#e8f1f7; }
 
 @media (prefers-color-scheme: dark) {
   :root { --ink:#e7edf3; --muted:#a8b5c2; --line:#344454; --paper:#111a23; --blue:#9fc1e3; --teal:#79b7c6; --pale:#1d2d3b; }
