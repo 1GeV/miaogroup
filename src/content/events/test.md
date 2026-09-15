@@ -3,7 +3,7 @@ title: 'Example group meeting $\eta$'
 type: defense
 date: 2026-09-16T15:00:00+08:00
 # endDate: 2026-08-22T17:00:00+08:00
-time: "00:15-00:16"
+time: "00:18"
 location: "Room to be announced"
 speaker: "Miao Group"
 onlineMeeting:
