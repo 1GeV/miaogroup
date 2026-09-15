@@ -68,13 +68,13 @@ const typeLabel = (type: string) => type.replace('-', ' ');
 
   {upcoming.length > 0 && <section class="section-block" aria-labelledby="upcoming-title">
     <div class="section-heading"><div><p class="eyebrow">The next horizon</p><div class="upcoming-heading"><h2 id="upcoming-title">Upcoming academic activity</h2>{upcoming[0] && <span class="upcoming-countdown" data-start={upcoming[0].schedule.start.toISOString()} data-end={upcoming[0].schedule.end?.toISOString() || ''}>Loading…</span>}</div></div><a class="text-link" href={`${base}calendar/`}>Full calendar <span aria-hidden="true">→</span></a></div>
-    <div class="event-list">{upcoming.map(({ kind, entry }) => {
+    <div class="event-list">{upcoming.map(({ kind, entry, schedule }) => {
       const { data } = entry;
       const href = kind === 'seminar'
         ? `${base}seminars/#talk-${entry.id}`
         : `${base}calendar/?event=${encodeURIComponent(entry.id)}`;
       const meetings = normalizeOnlineMeetings(data.onlineMeeting);
-      return <article class="event-row event-row-link" data-href={href} tabindex="0" role="link" aria-label={`View ${data.title}`}><time datetime={data.date.toISOString()}><strong>{data.date.getDate().toString().padStart(2, '0')}</strong><span>{formatDate(data.date).split(' ')[0]}</span></time><div><p class="event-type">{typeLabel(kind === 'seminar' ? 'seminar' : data.type)}</p><h3 set:html={renderMath(data.title)}></h3><p class="muted">{data.speaker && <span set:html={renderSpeaker(data.speaker)} />}{data.speaker && (data.time || data.location || data.contact || meetings.length > 0) && ' · '}{data.time}{data.time && (data.location || data.contact || meetings.length > 0) && ' · '}{data.location}{data.location && (data.contact || meetings.length > 0) && ' · '}{data.contact && <span set:html={renderContact(data.contact)} />}{data.contact && meetings.length > 0 && ' · '}{meetings.map((meeting, index) => <>{index > 0 && ' · '}{meeting.url ? <a class="meeting-link" href={meeting.url} target="_blank" rel="noreferrer">{meeting.label} ↗</a> : <span class="meeting-link">{meeting.label}</span>}{meeting.copy && ' · '}{meeting.copy && <span set:html={renderMeetingCopy(meeting.copy)} />}</>)}</p></div><span class="event-row-arrow" aria-hidden="true">→</span></article>;
+      return <article class="event-row event-row-link" data-start={schedule.start.toISOString()} data-end={schedule.end?.toISOString() || ''} data-href={href} tabindex="0" role="link" aria-label={`View ${data.title}`}><time datetime={data.date.toISOString()}><strong>{data.date.getDate().toString().padStart(2, '0')}</strong><span>{formatDate(data.date).split(' ')[0]}</span></time><div><p class="event-type">{typeLabel(kind === 'seminar' ? 'seminar' : data.type)}</p><h3 set:html={renderMath(data.title)}></h3><p class="muted">{data.speaker && <span set:html={renderSpeaker(data.speaker)} />}{data.speaker && (data.time || data.location || data.contact || meetings.length > 0) && ' · '}{data.time}{data.time && (data.location || data.contact || meetings.length > 0) && ' · '}{data.location}{data.location && (data.contact || meetings.length > 0) && ' · '}{data.contact && <span set:html={renderContact(data.contact)} />}{data.contact && meetings.length > 0 && ' · '}{meetings.map((meeting, index) => <>{index > 0 && ' · '}{meeting.url ? <a class="meeting-link" href={meeting.url} target="_blank" rel="noreferrer">{meeting.label} ↗</a> : <span class="meeting-link">{meeting.label}</span>}{meeting.copy && ' · '}{meeting.copy && <span set:html={renderMeetingCopy(meeting.copy)} />}</>)}</p></div><span class="event-row-arrow" aria-hidden="true">→</span></article>;
     })}</div>
   </section>}
 
@@ -88,7 +88,7 @@ const typeLabel = (type: string) => type.replace('-', ' ');
       row.addEventListener('click', (event) => { if (!event.target.closest('a,[data-copy]')) go(); });
       row.addEventListener('keydown', (event) => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); go(); } });
     });
-    const countdown = document.querySelector('.upcoming-countdown');
+    const upcomingSection = document.querySelector('[aria-labelledby="upcoming-title"]');`r`n    document.querySelectorAll('.event-row-link[data-start]').forEach((row) => {`r`n      const end = row.dataset.end ? new Date(row.dataset.end).getTime() : new Date(row.dataset.start).getTime();`r`n      if (Date.now() >= end) row.remove();`r`n    });`r`n    if (upcomingSection && !upcomingSection.querySelector('.event-row-link')) upcomingSection.remove();`r`n    const countdown = document.querySelector('.upcoming-countdown');
     const updateCountdown = () => {
       if (!countdown) return;
       const start = new Date(countdown.dataset.start);
@@ -109,3 +109,6 @@ const typeLabel = (type: string) => type.replace('-', ' ');
     window.setInterval(updateCountdown, 30000);
   </script>
 </Layout>
+
+
+
