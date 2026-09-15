@@ -2,7 +2,7 @@
 series: 'Strings, Fields and Holography Seminar'
 semester: "2026 Fall"
 date: 2026-09-16
-time: "00:09-00:11"
+time: "00:11-00:13"
 location: "Room B201, Hanlin Building 3"
 speaker:
   name: "Zhe-Wen Hu"
