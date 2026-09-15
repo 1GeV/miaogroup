@@ -16,5 +16,3 @@ public: false
 #     url: "https://arxiv.org/"
 draft: false
 ---
-
-This is a temporary example event.

@@ -28,8 +28,9 @@ const upcoming = [
   ...(nextSeminar ? [{ kind: 'seminar' as const, entry: nextSeminar.entry, schedule: nextSeminar.schedule }] : [])
 ].sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf());
 const currentSeminar = seminars
-  .filter((seminar) => seminar.data.date >= new Date())
-  .sort((a, b) => a.data.date.valueOf() - b.data.date.valueOf())[0] ?? seminars[0];
+  .map((entry) => ({ entry, schedule: scheduleFor(entry) }))
+  .filter(({ schedule }) => schedule.start >= now || Boolean(schedule.end && schedule.end > now))
+  .sort((a, b) => a.schedule.start.valueOf() - b.schedule.start.valueOf())[0]?.entry ?? seminars[0];
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
 const typeLabel = (type: string) => type.replace('-', ' ');
 ---
@@ -88,7 +89,13 @@ const typeLabel = (type: string) => type.replace('-', ' ');
       row.addEventListener('click', (event) => { if (!event.target.closest('a,[data-copy]')) go(); });
       row.addEventListener('keydown', (event) => { if (['Enter', ' '].includes(event.key)) { event.preventDefault(); go(); } });
     });
-    const upcomingSection = document.querySelector('[aria-labelledby="upcoming-title"]');`r`n    document.querySelectorAll('.event-row-link[data-start]').forEach((row) => {`r`n      const end = row.dataset.end ? new Date(row.dataset.end).getTime() : new Date(row.dataset.start).getTime();`r`n      if (Date.now() >= end) row.remove();`r`n    });`r`n    if (upcomingSection && !upcomingSection.querySelector('.event-row-link')) upcomingSection.remove();`r`n    const countdown = document.querySelector('.upcoming-countdown');
+    const upcomingSection = document.querySelector('[aria-labelledby="upcoming-title"]');
+    document.querySelectorAll('.event-row-link[data-start]').forEach((row) => {
+      const end = row.dataset.end ? new Date(row.dataset.end).getTime() : new Date(row.dataset.start).getTime();
+      if (Date.now() >= end) row.remove();
+    });
+    if (upcomingSection && !upcomingSection.querySelector('.event-row-link')) upcomingSection.remove();
+    const countdown = document.querySelector('.upcoming-countdown');
     const updateCountdown = () => {
       if (!countdown) return;
       const start = new Date(countdown.dataset.start);
@@ -109,6 +116,7 @@ const typeLabel = (type: string) => type.replace('-', ' ');
     window.setInterval(updateCountdown, 30000);
   </script>
 </Layout>
+
 
 
 
