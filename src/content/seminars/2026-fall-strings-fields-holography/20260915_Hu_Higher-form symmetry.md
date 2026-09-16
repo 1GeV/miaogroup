@@ -1,6 +1,6 @@
 ---
 series: 'Strings, Fields and Holography Seminar'
-semester: "2026 Fall"
+semester: "Fall 2026"
 date: 2026-09-15
 time: "19:30-21:00"
 location: "Room B201, Hanlin Building 3"

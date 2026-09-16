@@ -1,6 +1,6 @@
 ---
 series: 'Strings, Fields and Holography Seminar'
-semester: "2026 Fall"
+semester: "Fall 2026"
 archiveAfter: 2027-02-28T23:59:59+08:00
 ---
 

@@ -1,6 +1,6 @@
 ---
 series: 'Strings, Fields and Holography Seminar'
-semester: "2026 Fall"
+semester: "Fall 2026"
 date: 2026-09-29
 # time: "15:00-17:00"
 location: "Room to be announced"
