@@ -27,6 +27,13 @@ const labels = {
   defense: 'Thesis defense', other: 'Other'
 };
 
+// Street address: https://spa.sysu.edu.cn/en/teacher/2622 (school footer).
+// Keep the authored room/building text, and expand only the calendar location.
+export const calendarLocation = (location?: string) => {
+  if (!location || !/\bHanlin\b/i.test(location) || /\bDaxue\s+Road\b/i.test(location)) return location;
+  return `${location}, Sun Yat-sen University (Zhuhai Campus), No. 2 Daxue Road, Tangjiawan, Xiangzhou District, Zhuhai, Guangdong, China`;
+};
+
 export const calendarEventUrl = (event: CalendarEvent, calendarUrl: string) => {
   const url = new URL(calendarUrl);
   url.searchParams.set('event', event.id);
@@ -94,7 +101,8 @@ const serializeEvent = (event: CalendarEvent, calendarUrl: string, timestamp: st
   }
   lines.push(`SUMMARY:${icalEscape(event.title)}`);
   lines.push(`DESCRIPTION:${icalEscape(calendarDescription(event, calendarUrl))}`);
-  if (event.location) lines.push(`LOCATION:${icalEscape(event.location)}`);
+  const location = calendarLocation(event.location);
+  if (location) lines.push(`LOCATION:${icalEscape(location)}`);
   lines.push(`URL:${calendarEventUrl(event, calendarUrl)}`);
   lines.push(`CATEGORIES:${labels[event.type]}`);
   lines.push('END:VEVENT');
