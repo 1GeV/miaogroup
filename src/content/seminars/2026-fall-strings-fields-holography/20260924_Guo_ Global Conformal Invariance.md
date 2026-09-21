@@ -14,7 +14,8 @@ title: 'Global Conformal Invariance'
 #   url: "https://meet.ffmuc.net/globalconformalinvariance"
 onlineMeeting:
   label: "WPS Meeting"
-  url: "https://rili.wps.cn/s/e_I1xhpKqcb"
+  copy: "Meeting ID: 262 123 1807"
+  url: "https://meeting.kdocs.cn/meeting/s/05SETZvm09R"
 description: 'This lecture introduces global conformal transformations (translations, rotations, dilatations, special conformal transformations), derives the d-dimensional conformal algebra, and discusses how global conformal symmetry constrains two- and three-point correlation functions.'
 references:
   - label: '$\textit{Conformal Field Theory}$'
