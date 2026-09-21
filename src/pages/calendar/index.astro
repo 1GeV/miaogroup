@@ -33,6 +33,9 @@ const events = [
     location: data.location,
     speaker: data.speaker,
     contact: data.contact,
+    series: data.series,
+    semester: data.semester,
+    paper: data.paper,
     onlineMeetings: normalizeOnlineMeetings(data.onlineMeeting),
     description: data.description || data.paper,
     references: [
@@ -76,7 +79,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
   </section>
   <div class="calendar-search-row" id="calendar-search-row" hidden><label class="calendar-search">Search <input id="event-search" type="search" autocomplete="off" /></label></div>
   <div class="custom-range" id="custom-range" hidden><label>Start <input id="range-start" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="Start date, YYYY-MM-DD" /></label><span aria-hidden="true">to</span><label>End <input id="range-end" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="End date, YYYY-MM-DD" /></label></div>
-  <div id="calendar-app" data-events={JSON.stringify(serialized)} data-labels={JSON.stringify(labels)}>
+  <div id="calendar-app" data-events={JSON.stringify(serialized)} data-labels={JSON.stringify(labels)} data-calendar-url={new URL('calendar/', subscriptionUrl).href}>
     <div class="calendar-monthbar" id="calendar-monthbar"><div class="month-nav"><button class="icon-button" id="previous-month" aria-label="Previous month">←</button><div class="month-picker"><div class="picker-control" id="month-control"><label><span class="sr-only">Search month</span><input id="month-picker" type="text" autocomplete="off" role="combobox" aria-controls="month-menu" aria-expanded="false" aria-label="Month" /></label><div class="picker-menu" id="month-menu" role="listbox" hidden></div></div><div class="picker-control" id="year-control"><label><span class="sr-only">Search year</span><input id="year-picker" type="text" inputmode="numeric" autocomplete="off" role="combobox" aria-controls="year-menu" aria-expanded="false" aria-label="Year" /></label><div class="picker-menu" id="year-menu" role="listbox" hidden></div></div></div><button class="icon-button" id="next-month" aria-label="Next month">→</button></div><button class="month-today" id="today-month" type="button" hidden>Today</button></div>
     <div class="calendar-legend" id="calendar-legend" aria-label="Activity types"><span class="legend-item"><i class="legend-dot event-group-meeting"></i>Group meeting</span><span class="legend-item"><i class="legend-dot event-seminar"></i>Seminar</span><span class="legend-item"><i class="legend-dot event-lecture"></i>Lecture</span><span class="legend-item"><i class="legend-dot event-defense"></i>Thesis defense</span><span class="legend-item"><i class="legend-dot event-other"></i>Other</span></div>
     <div class="calendar-month-view" id="month-view"><div class="weekday-row">{['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((day) => <span>{day}</span>)}</div><div class="month-grid" id="month-grid"></div></div>
@@ -84,7 +87,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     <div class="calendar-empty" id="calendar-empty" hidden><span class="empty-index">01</span><h3>No activities match this view.</h3></div>
   </div>
   <script>
-    import { foldIcalLine } from '../../lib/ical';
+    import { serializeCalendar } from '../../lib/ical';
     const subscribeToggle = document.querySelector<HTMLButtonElement>('#subscribe-toggle')!;
     const subscriptionPanel = document.querySelector<HTMLElement>('#calendar-subscription')!;
     const subscriptionInput = document.querySelector<HTMLInputElement>('#subscription-url')!;
@@ -373,74 +376,9 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     document.querySelector('#next-month').addEventListener('click', () => { selectedDateKey = null; cursor.setMonth(cursor.getMonth() + 1); render(); });
     todayButton.addEventListener('click', () => { selectedDateKey = null; cursor = new Date(today.getFullYear(), today.getMonth(), 1); render(); });
     document.addEventListener('keydown', (event) => { if (monthBar.hidden || !['ArrowLeft', 'ArrowRight'].includes(event.key) || ['INPUT', 'SELECT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement?.tagName)) return; event.preventDefault(); selectedDateKey = null; cursor.setMonth(cursor.getMonth() + (event.key === 'ArrowRight' ? 1 : -1)); render(); });
-    const icalEscape = (value) => String(value).replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/([;,])/g, '\\$1');
-    const icalDate = (date) => `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
-    const icalLocalDateTime = (date, hour, minute) => `${icalDate(date)}T${String(hour).padStart(2, '0')}${String(minute).padStart(2, '0')}00`;
-    const icalUtcDateTime = (date) => date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
-    const addDays = (date, days) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + days);
-    const parseEventTime = (value) => {
-      const match = /^(\d{1,2}):(\d{2})(?:\s*[-–—]\s*(\d{1,2}):(\d{2}))?$/.exec(String(value || '').trim());
-      if (!match) return null;
-      const startHour = Number(match[1]);
-      const startMinute = Number(match[2]);
-      const endHour = match[3] ? Number(match[3]) : undefined;
-      const endMinute = match[4] ? Number(match[4]) : undefined;
-      const valid = (hour, minute) => hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
-      if (!valid(startHour, startMinute) || (endHour !== undefined && !valid(endHour, endMinute))) return null;
-      return { startHour, startMinute, endHour, endMinute, hasEnd: endHour !== undefined && endMinute !== undefined };
-    };
-    const serializeIcalEvent = (event) => {
-      const startDay = eventDate(event.date);
-      const parsedTime = parseEventTime(event.time);
-      const lines = [
-        'BEGIN:VEVENT',
-        `UID:${encodeURIComponent(String(event.id))}@miaogroup`,
-        `DTSTAMP:${icalUtcDateTime(new Date())}`
-      ];
-      if (!parsedTime) {
-        const configuredEndDay = event.endDate ? eventDate(event.endDate) : startDay;
-        const endDay = configuredEndDay >= startDay ? configuredEndDay : startDay;
-        lines.push(`DTSTART;VALUE=DATE:${icalDate(startDay)}`);
-        lines.push(`DTEND;VALUE=DATE:${icalDate(addDays(endDay, 1))}`);
-      } else {
-        lines.push(`DTSTART;TZID=Asia/Shanghai:${icalLocalDateTime(startDay, parsedTime.startHour, parsedTime.startMinute)}`);
-        if (parsedTime.hasEnd) {
-          const configuredEndDay = event.endDate ? eventDate(event.endDate) : startDay;
-          const endDay = configuredEndDay >= startDay ? configuredEndDay : startDay;
-          lines.push(`DTEND;TZID=Asia/Shanghai:${icalLocalDateTime(endDay, parsedTime.endHour, parsedTime.endMinute)}`);
-        }
-      }
-      lines.push(`SUMMARY:${icalEscape(event.title)}`);
-      if (event.description) lines.push(`DESCRIPTION:${icalEscape(event.description)}`);
-      if (event.location) lines.push(`LOCATION:${icalEscape(event.location)}`);
-      if (event.type && labels[event.type]) lines.push(`CATEGORIES:${icalEscape(labels[event.type])}`);
-      lines.push('END:VEVENT');
-      return lines.map(foldIcalLine).join('\r\n');
-    };
     document.querySelector('#export-ical').addEventListener('click', () => {
       const exportEvents = visibleEvents().filter(matchesRange);
-      const calendarLines = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Miao Group//Academic Calendar//EN',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
-        'X-WR-CALNAME:Miao Group Academic Calendar',
-        'X-WR-TIMEZONE:Asia/Shanghai',
-        'BEGIN:VTIMEZONE',
-        'TZID:Asia/Shanghai',
-        'X-LIC-LOCATION:Asia/Shanghai',
-        'BEGIN:STANDARD',
-        'TZOFFSETFROM:+0800',
-        'TZOFFSETTO:+0800',
-        'TZNAME:CST',
-        'DTSTART:19700101T000000',
-        'END:STANDARD',
-        'END:VTIMEZONE',
-        ...exportEvents.map(serializeIcalEvent),
-        'END:VCALENDAR'
-      ];
-      const blob = new Blob([`${calendarLines.join('\r\n')}\r\n`], { type: 'text/calendar;charset=utf-8' });
+      const blob = new Blob([serializeCalendar(exportEvents, app.dataset.calendarUrl)], { type: 'text/calendar;charset=utf-8' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.download = 'miaogroup-calendar.ics';
