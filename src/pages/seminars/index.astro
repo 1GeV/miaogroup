@@ -84,10 +84,10 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
                   <h3 set:html={renderMath(record.data.title)}></h3>
                   {record.data.time && <p class="muted">Time: {record.data.time}</p>}
                   {record.data.location && <p class="muted">Location: {record.data.location}</p>}
+                  {renderOnlineMeetings(record.data.onlineMeeting) && <p class="muted meeting-line">Online meeting: <Fragment set:html={renderOnlineMeetings(record.data.onlineMeeting)} /></p>}
                   {record.data.contact && <p class="muted activity-contact" set:html={renderContact(record.data.contact)}></p>}
                   {record.data.description && <p class="muted" set:html={renderMath(record.data.description)}></p>}
                   {record.data.paper && <p class="muted" set:html={renderMath(`Reading: ${record.data.paper}`)}></p>}
-                  {renderOnlineMeetings(record.data.onlineMeeting) && <p class="muted meeting-line" set:html={renderOnlineMeetings(record.data.onlineMeeting)}></p>}
                   <div class="card-links">
                     {record.data.references.map((reference) => reference.url ? <a href={reference.url} target="_blank" rel="noreferrer" set:html={`${renderMath(reference.label)} ↗`}></a> : <span class="reference-label" set:html={renderMath(reference.label)}></span>)}
                     {record.data.recordingUrl && <a href={record.data.recordingUrl} target="_blank" rel="noreferrer">Recording ↗</a>}

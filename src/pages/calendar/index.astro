@@ -91,6 +91,20 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     const empty = document.querySelector('#calendar-empty');
     const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     const normalizeSpeaker = (value) => typeof value === 'string' ? { name: value } : value?.name ? value : null;
+    const eventStartMinutes = (event) => {
+      const match = /^(\d{1,2}):(\d{2})/.exec(String(event.time || '').trim());
+      return match ? Number(match[1]) * 60 + Number(match[2]) : Number.POSITIVE_INFINITY;
+    };
+    const chronologicalEvents = (items) => [...items].sort((a, b) => eventDate(a.date).valueOf() - eventDate(b.date).valueOf()
+      || eventStartMinutes(a) - eventStartMinutes(b)
+      || String(a.title).localeCompare(String(b.title)));
+    const listEventsForRange = (items) => {
+      const chronological = chronologicalEvents(items);
+      if (range !== 'all') return chronological;
+      const upcoming = chronological.filter((event) => eventDate(event.date) >= today);
+      const past = chronological.filter((event) => eventDate(event.date) < today).reverse();
+      return [...upcoming, ...past];
+    };
     const searchableText = (event) => [event.title, normalizeSpeaker(event.speaker)?.name, event.contact, event.location, event.description, ...(event.onlineMeetings || []).flatMap((meeting) => [meeting.label, meeting.url, meeting.copy])].filter(Boolean).join(' ').toLowerCase();
     const visibleEvents = () => events.filter((event) => (filter === 'all' || event.type === filter) && (!searchQuery || searchableText(event).includes(searchQuery)));
     const inCursorMonth = (event) => { const date = eventDate(event.date); return date.getFullYear() === cursor.getFullYear() && date.getMonth() === cursor.getMonth(); };
@@ -199,7 +213,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
         const cell = document.createElement('div'); cell.className = `day-cell${isToday ? ' is-today' : ''}${isLastRow ? ' is-last-row' : ''}${isLastColumn ? ' is-last-column' : ''}`;
         if (day > 0 && day <= days) {
           const cellDate = new Date(cursor.getFullYear(), cursor.getMonth(), day);
-          const dayEvents = filtered.filter((event) => dateKey(eventDate(event.date)) === dateKey(cellDate));
+          const dayEvents = chronologicalEvents(filtered.filter((event) => dateKey(eventDate(event.date)) === dateKey(cellDate)));
           cell.innerHTML = `<span class="day-number">${day}</span>`;
           if (window.matchMedia('(max-width: 760px)').matches) cell.addEventListener('click', () => revealDate(cellDate));
           dayEvents.forEach((event) => {
@@ -209,7 +223,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
         } else cell.classList.add('day-cell-empty');
         grid.append(cell);
       }
-      const listEvents = filtered.filter(matchesRange);
+      const listEvents = listEventsForRange(filtered.filter(matchesRange));
       list.innerHTML = listEvents.length ? listEvents.map((event) => { const date = eventDate(event.date); const references = (event.references || []).map((reference) => reference.url ? `<a href="${escapeHtml(reference.url)}" target="_blank" rel="noreferrer">${renderMathText(reference.label)} ↗</a>` : `<span class="reference-label">${renderMathText(reference.label)}</span>`).join(''); const meetings = renderOnlineMeetings(event.onlineMeetings); const detailParts = [renderSpeaker(event.speaker), event.time && renderMathText(event.time), event.location && renderMathText(event.location), event.contact && renderContact(event.contact)].filter(Boolean); const detailText = detailParts.join(' · '); const detailFallback = detailText || (!meetings ? 'Details to follow' : ''); const description = event.description ? `<p class="muted event-description">${renderMathText(event.description)}</p>` : ''; return `<article class="event-row" id="event-${escapeHtml(event.id)}" data-date-key="${dateKey(date)}"><time datetime="${event.date}"><strong>${date.getDate().toString().padStart(2, '0')}</strong><span>${date.toLocaleDateString('en-US', { month: 'short' })}</span></time><div><p class="event-type">${escapeHtml(labels[event.type])}</p><h3>${renderMathText(event.title)}</h3><p class="muted event-details">${detailFallback}${meetings ? `${detailFallback ? ' · ' : ''}${meetings}` : ''}</p>${description}${references ? `<div class="calendar-links">${references}</div>` : ''}</div></article>`; }).join('') : '';
       empty.hidden = listEvents.length > 0;
       typesetCalendar();

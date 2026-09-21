@@ -10,8 +10,11 @@ speaker:
 title: 'Global Conformal Invariance'
 # paper: "Example reference paper"
 # onlineMeeting:
-#   label: "Tencent Meeting"
-#   copy: "Meeting ID: 123 456 789; Passcode: 2468"
+#   label: "Jitsi by Freifunk München"
+#   url: "https://meet.ffmuc.net/globalconformalinvariance"
+onlineMeeting:
+  label: "WPS Meeting"
+  url: "https://rili.wps.cn/s/e_I1xhpKqcb"
 description: 'This lecture introduces global conformal transformations (translations, rotations, dilatations, special conformal transformations), derives the d-dimensional conformal algebra, and discusses how global conformal symmetry constrains two- and three-point correlation functions.'
 references:
   - label: '$\textit{Conformal Field Theory}$'
