@@ -16,5 +16,7 @@ description: 'An introduction to generalized symmetries in quantum field theory,
 references:
   - label: "arXiv:2307.09215"
     url: "https://arxiv.org/abs/2307.09215"
+  - label: "slides"
+    url: "https://github.com/1GeV/miaogroup/releases/download/20260915/generalized-symmetries.pdf
 draft: false
 ---
