@@ -22,6 +22,27 @@
 .calendar-control { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px; white-space:nowrap; }
 .calendar-control select { color:var(--ink); }
 .calendar-type-control { margin-left:auto; }
+.calendar-toolbar { flex-wrap:wrap; }
+.calendar-actions { display:flex; gap:8px; }
+.calendar-actions .button { white-space:nowrap; gap:12px; }
+.calendar-actions .button:hover, #subscribe-toggle[aria-expanded="true"] { background:var(--pale); border-color:var(--teal); }
+.calendar-actions .button:focus-visible, .calendar-subscription :focus-visible { outline:2px solid var(--teal); outline-offset:3px; }
+.subscribe-chevron { display:inline-block; transition:transform .15s ease; }
+#subscribe-toggle[aria-expanded="true"] .subscribe-chevron { transform:rotate(180deg); }
+.calendar-subscription { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.15fr); gap:24px 40px; padding:24px; border-bottom:1px solid var(--line); background:var(--pale); }
+.calendar-subscription[hidden] { display:none; }
+.subscription-intro h2 { margin:0 0 8px; color:var(--ink); font-size:18px; font-weight:600; letter-spacing:0; line-height:1.4; }
+.subscription-intro p { margin:0; color:var(--muted); font-size:13px; }
+.subscription-intro .subscription-coverage { margin-top:12px; font-size:12px; }
+.subscription-controls { min-width:0; align-self:center; }
+.subscription-controls label { display:block; margin-bottom:7px; color:var(--muted); font-size:12px; }
+.subscription-url-row { display:flex; gap:8px; }
+.subscription-url-row input { min-width:0; width:100%; border:1px solid var(--line); background:var(--paper); padding:11px 12px; color:var(--ink); font:13px var(--sans); }
+.subscription-url-row .button { flex-shrink:0; background:var(--paper); white-space:nowrap; }
+.subscription-footer { display:flex; flex-wrap:wrap; gap:6px 18px; align-items:center; justify-content:space-between; margin-top:10px; min-height:20px; font-size:12px; }
+.subscription-footer a { color:var(--teal); }
+.subscription-footer a:hover { text-decoration:underline; text-underline-offset:3px; }
+#subscription-status { color:var(--muted); }
 .calendar-search-row { display:flex; justify-content:flex-end; padding:14px 0; border-bottom:1px solid var(--line); }
 .calendar-search-row[hidden] { display:none !important; }
 .calendar-search { display:flex; align-items:center; gap:12px; width:min(420px, 100%); color:var(--muted); font-size:13px; }
@@ -82,6 +103,9 @@
 .footer-affiliation-compact { display:none; }
 
 @media (max-width:760px) {
+  .calendar-actions { width:100%; justify-content:flex-end; }
+  .calendar-actions .button-outline { margin-left:0; }
+  .calendar-subscription { grid-template-columns:minmax(0, 1fr); padding:20px 16px; gap:20px; }
   .footer-affiliation-full { display:none; }
   .footer-affiliation-compact { display:inline; }
   .event-row { grid-template-columns:70px minmax(0, 1fr); gap:15px; }

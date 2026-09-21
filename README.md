@@ -36,6 +36,8 @@ draft: false
 
 `Export iCal` exports the activities currently visible after the selected date range, type filter, and search filter. An activity without `time` is exported as an all-day event. `time: "15:00-17:00"` exports a timed event in `Asia/Shanghai`; `time: "15:00"` exports only a start time.
 
+`Subscribe` opens a panel with the calendar subscription URL: `https://1gev.github.io/miaogroup/calendar.ics`. Add this URL as a subscription in your calendar app rather than importing a downloaded file. The feed includes all non-draft activities starting within 12 months of the build date (Shanghai time), independently of page filters. The panel shows the inclusive coverage dates. Each site deployment refreshes the feed and its date window; calendar apps fetch updates on their own schedules. Event UIDs match the manual export and remain stable as long as content file IDs stay unchanged.
+
 `speaker` accepts the original plain-text form or a linked form:
 
 ```yaml

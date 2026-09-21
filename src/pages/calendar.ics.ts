@@ -1,6 +1,7 @@
 import { getCollection } from 'astro:content';
 import type { APIRoute } from 'astro';
 import { parseTime, scheduleFor } from '../lib/schedule';
+import { foldIcalLine, subscriptionWindow } from '../lib/ical';
 
 export const prerender = true;
 
@@ -28,11 +29,6 @@ const shanghaiParts = (date: Date, options: Intl.DateTimeFormatOptions) => new I
   ...options
 }).formatToParts(date).reduce((parts, part) => ({ ...parts, [part.type]: part.value }), {} as Record<string, string>);
 
-const shanghaiDayStart = (date: Date) => {
-  const parts = shanghaiParts(date, { year: 'numeric', month: '2-digit', day: '2-digit' });
-  return new Date(`${parts.year}-${parts.month}-${parts.day}T00:00:00+08:00`);
-};
-
 const icalDate = (date: Date) => {
   const parts = shanghaiParts(date, { year: 'numeric', month: '2-digit', day: '2-digit' });
   return `${parts.year}${parts.month}${parts.day}`;
@@ -41,19 +37,6 @@ const icalDate = (date: Date) => {
 const icalUtcDateTime = (date: Date) => date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
 const addDays = (date: Date, days: number) => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 const icalEscape = (value: string) => value.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/([;,])/g, '\\$1');
-
-const foldIcalLine = (line: string) => {
-  const chunks: string[] = [];
-  let current = '';
-  for (const character of line) {
-    if (current.length >= 75) {
-      chunks.push(current);
-      current = ` ${character}`;
-    } else current += character;
-  }
-  if (current) chunks.push(current);
-  return chunks.join('\r\n');
-};
 
 const serializeEvent = (event: CalendarEvent, timestamp: string) => {
   const parsedTime = parseTime(event.time);
@@ -110,9 +93,7 @@ export const GET: APIRoute = async () => {
       description: data.description || data.paper
     }))
   ].sort((a, b) => scheduleFor(a).start.valueOf() - scheduleFor(b).start.valueOf());
-  const rangeStart = shanghaiDayStart(new Date());
-  const rangeEnd = new Date(rangeStart);
-  rangeEnd.setUTCFullYear(rangeEnd.getUTCFullYear() + 1);
+  const { start: rangeStart, end: rangeEnd } = subscriptionWindow();
   const subscriptionEvents = events.filter((event) => {
     const start = scheduleFor(event).start;
     return start >= rangeStart && start < rangeEnd;

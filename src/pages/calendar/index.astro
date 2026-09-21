@@ -1,6 +1,11 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import { subscriptionWindow } from '../../lib/ical';
+const subscriptionUrl = new URL(`${import.meta.env.BASE_URL}calendar.ics`, Astro.site ?? Astro.url.origin).href;
+const subscriptionDates = subscriptionWindow();
+const subscriptionDateFormat = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' });
+const subscriptionCoverage = `${subscriptionDateFormat.format(subscriptionDates.start)} – ${subscriptionDateFormat.format(new Date(subscriptionDates.end.valueOf() - 1))}`;
 const eventEntries = await getCollection('events', ({ data }) => !data.draft);
 const seminarEntries = await getCollection('seminars', ({ data }) => !data.draft);
 type MeetingValue = { label?: string; url?: string; copy?: string; copyText?: string };
@@ -42,7 +47,33 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
 ---
 <Layout title="Academic calendar">
   <section class="page-intro"><p class="eyebrow">Plan the week</p><h1>Academic calendar</h1><p>Group meetings, lectures, seminars, defenses, and other shared moments.</p></section>
-  <section class="calendar-toolbar" id="calendar-toolbar" aria-label="Calendar controls"><div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div><label class="calendar-control">Show <select id="range-filter"><option value="month">Selected month</option><option value="all">All dates</option><option value="custom">Custom range</option></select></label><label class="calendar-control calendar-type-control">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label><button class="button button-outline" id="export-ical">Export iCal <span aria-hidden="true">↓</span></button></section>
+  <section class="calendar-toolbar" id="calendar-toolbar" aria-label="Calendar controls">
+    <div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div>
+    <label class="calendar-control">Show <select id="range-filter"><option value="month">Selected month</option><option value="all">All dates</option><option value="custom">Custom range</option></select></label>
+    <label class="calendar-control calendar-type-control">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label>
+    <div class="calendar-actions">
+      <button class="button button-outline" id="export-ical">Export iCal <span aria-hidden="true">↓</span></button>
+      <button class="button button-outline" id="subscribe-toggle" type="button" aria-expanded="false" aria-controls="calendar-subscription">Subscribe <span class="subscribe-chevron" aria-hidden="true">⌄</span></button>
+    </div>
+  </section>
+  <section class="calendar-subscription" id="calendar-subscription" aria-labelledby="subscription-heading" hidden>
+    <div class="subscription-intro">
+      <h2 id="subscription-heading">Keep your calendar up to date</h2>
+      <p>Add this URL as a calendar subscription in your calendar app. Updates appear when your app refreshes.</p>
+      <p class="subscription-coverage">All activities · 12 months · UTC+8<br />{subscriptionCoverage}. Page filters do not apply.</p>
+    </div>
+    <div class="subscription-controls">
+      <label for="subscription-url">Subscription URL</label>
+      <div class="subscription-url-row">
+        <input id="subscription-url" type="url" value={subscriptionUrl} readonly spellcheck="false" />
+        <button class="button button-outline" id="copy-subscription" type="button">Copy link</button>
+      </div>
+      <div class="subscription-footer">
+        <a href={subscriptionUrl.replace(/^https?:/, 'webcal:')}>Open calendar app <span aria-hidden="true">↗</span></a>
+        <span id="subscription-status" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+  </section>
   <div class="calendar-search-row" id="calendar-search-row" hidden><label class="calendar-search">Search <input id="event-search" type="search" autocomplete="off" /></label></div>
   <div class="custom-range" id="custom-range" hidden><label>Start <input id="range-start" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="Start date, YYYY-MM-DD" /></label><span aria-hidden="true">to</span><label>End <input id="range-end" type="text" inputmode="numeric" placeholder="YYYY-MM-DD" aria-label="End date, YYYY-MM-DD" /></label></div>
   <div id="calendar-app" data-events={JSON.stringify(serialized)} data-labels={JSON.stringify(labels)}>
@@ -53,6 +84,34 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     <div class="calendar-empty" id="calendar-empty" hidden><span class="empty-index">01</span><h3>No activities match this view.</h3></div>
   </div>
   <script>
+    import { foldIcalLine } from '../../lib/ical';
+    const subscribeToggle = document.querySelector<HTMLButtonElement>('#subscribe-toggle')!;
+    const subscriptionPanel = document.querySelector<HTMLElement>('#calendar-subscription')!;
+    const subscriptionInput = document.querySelector<HTMLInputElement>('#subscription-url')!;
+    const subscriptionStatus = document.querySelector<HTMLElement>('#subscription-status')!;
+    subscribeToggle.addEventListener('click', () => {
+      const expanded = subscribeToggle.getAttribute('aria-expanded') !== 'true';
+      subscribeToggle.setAttribute('aria-expanded', String(expanded));
+      subscriptionPanel.hidden = !expanded;
+    });
+    subscriptionPanel.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      subscriptionPanel.hidden = true;
+      subscribeToggle.setAttribute('aria-expanded', 'false');
+      subscribeToggle.focus();
+    });
+    subscriptionInput.addEventListener('click', () => subscriptionInput.select());
+    document.querySelector('#copy-subscription')!.addEventListener('click', async () => {
+      subscriptionStatus.textContent = '';
+      try {
+        await navigator.clipboard.writeText(subscriptionInput.value);
+        subscriptionStatus.textContent = 'Link copied';
+      } catch {
+        subscriptionInput.focus();
+        subscriptionInput.select();
+        subscriptionStatus.textContent = document.execCommand('copy') ? 'Link copied' : 'Select and copy the URL above.';
+      }
+    });
     const app = document.querySelector('#calendar-app');
     const events = JSON.parse(app.dataset.events || '[]');
     const labels = JSON.parse(app.dataset.labels || '{}');
@@ -329,18 +388,6 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
       const valid = (hour, minute) => hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59;
       if (!valid(startHour, startMinute) || (endHour !== undefined && !valid(endHour, endMinute))) return null;
       return { startHour, startMinute, endHour, endMinute, hasEnd: endHour !== undefined && endMinute !== undefined };
-    };
-    const foldIcalLine = (line) => {
-      const chunks = [];
-      let current = '';
-      for (const character of line) {
-        if (current.length >= 75) {
-          chunks.push(current);
-          current = ` ${character}`;
-        } else current += character;
-      }
-      if (current) chunks.push(current);
-      return chunks.join('\r\n');
     };
     const serializeIcalEvent = (event) => {
       const startDay = eventDate(event.date);
