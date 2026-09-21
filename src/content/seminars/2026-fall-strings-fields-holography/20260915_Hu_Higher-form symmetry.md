@@ -17,6 +17,6 @@ references:
   - label: "arXiv:2307.09215"
     url: "https://arxiv.org/abs/2307.09215"
   - label: "Slides"
-    url: "https://github.com/1GeV/miaogroup/releases/download/20260915/generalized-symmetries.pdf
+    url: "https://github.com/1GeV/miaogroup/releases/download/20260915/generalized-symmetries.pdf"
 draft: false
 ---
