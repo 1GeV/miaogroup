@@ -21,7 +21,7 @@ const atShanghaiTime = (date: Date, hour = 0, minute = 0) => {
   return new Date(`${parts.year}-${parts.month}-${parts.day}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+08:00`);
 };
 
-const parseTime = (value?: string) => {
+export const parseTime = (value?: string) => {
   const match = value?.trim().match(/^(\d{1,2}):(\d{2})(?:\s*[-–—]\s*(\d{1,2}):(\d{2}))?$/);
   if (!match) return null;
   const values = [Number(match[1]), Number(match[2]), ...(match[3] ? [Number(match[3]), Number(match[4])] : [])];
