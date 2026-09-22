@@ -99,16 +99,11 @@
 .calendar-event:focus-visible { outline:2px solid var(--teal); outline-offset:1px; }
 .speaker-link, .contact-link { color:inherit; }
 .speaker-link:hover, .contact-link:hover { color:var(--teal); }
-.site-footer { flex-wrap:wrap; gap:8px 24px; }
-.footer-affiliation { text-transform:none; letter-spacing:0; white-space:nowrap; }
-.footer-affiliation-compact { display:none; }
 
 @media (max-width:760px) {
   .calendar-actions { width:100%; justify-content:flex-end; }
   .calendar-actions .button-outline { margin-left:0; }
   .calendar-subscription { grid-template-columns:minmax(0, 1fr); padding:20px 16px; gap:20px; }
-  .footer-affiliation-full { display:none; }
-  .footer-affiliation-compact { display:inline; }
   .event-row { grid-template-columns:70px minmax(0, 1fr); gap:15px; }
   .event-row-link { grid-template-columns:70px minmax(0, 1fr) 24px; }
   .calendar-control { width:100%; justify-content:space-between; }

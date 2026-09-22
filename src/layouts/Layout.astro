@@ -55,13 +55,22 @@ const socialImageUrl = new URL(`${import.meta.env.BASE_URL}social-preview.png`, 
         <slot />
       </main>
       <footer class="site-footer">
-        <span>Miao Group</span>
-        <span>Holography · Strings · Quantum Gravity</span>
-        <a class="footer-affiliation" href="https://spa.sysu.edu.cn/en/teacher/2622" target="_blank" rel="noreferrer"><span class="footer-affiliation-full">Rong-Xin Miao · School of Physics and Astronomy · SYSU ↗</span><span class="footer-affiliation-compact">R.-X. Miao · Physics and Astronomy · SYSU ↗</span></a>
-        <span>UTC+8 · Asia/Shanghai</span>
+        <div class="footer-identity">
+          <span class="footer-copyright">© <span data-current-year>{new Date().getFullYear()}</span> Miao Group</span>
+          <span class="footer-institution"><span>School of Physics and Astronomy</span><span>Sun Yat-sen University</span></span>
+        </div>
+        <div class="footer-details">
+          <span class="footer-topics">Holography · Strings · Quantum Gravity</span>
+          <div class="footer-links">
+            <a href="https://spa.sysu.edu.cn/en/teacher/2622" target="_blank" rel="noreferrer">Rong-Xin Miao · Profile (Chinese) ↗</a>
+            <a href="https://orcid.org/0000-0003-1032-2313" target="_blank" rel="noreferrer" aria-label="Rong-Xin Miao on ORCID">ORCID ↗</a>
+          </div>
+          <span class="footer-timezone">UTC+8 · Asia/Shanghai</span>
+        </div>
       </footer>
     </div>
     <script is:inline>
+      document.querySelectorAll('[data-current-year]').forEach((year) => { year.textContent = String(new Date().getFullYear()); });
       document.addEventListener('click', async (event) => {
         const button = event.target.closest('[data-copy]');
         if (!button) return;
