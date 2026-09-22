@@ -83,7 +83,7 @@
 }
 
 .svg-network line,
-.svg-network path { stroke: #b2c8d5; stroke-linecap: round; fill: none; }
+.svg-network path { stroke: #b2c8d5; stroke-width: 1; stroke-linecap: round; fill: none; vector-effect: non-scaling-stroke; }
 .svg-operators circle,
 .svg-network circle { fill: var(--paper); stroke: var(--teal); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .svg-label { fill: var(--muted); font-family: var(--serif); font-size: 13px; font-style: normal; }
