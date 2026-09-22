@@ -48,10 +48,10 @@ const serialized = events.map((data) => ({ ...data, date: data.date.toISOString(
 const labels = { 'group-meeting': 'Group meeting', seminar: 'Seminar', lecture: 'Lecture', defense: 'Thesis defense', other: 'Other' };
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
 ---
-<Layout title="Academic calendar">
+<Layout title="Academic calendar" description="Academic calendar for Miao Group meetings, lectures, seminars, defenses, and other public activities at Sun Yat-sen University.">
   <section class="page-intro"><p class="eyebrow">Plan the week</p><h1>Academic calendar</h1><p>Group meetings, lectures, seminars, defenses, and other shared moments.</p></section>
   <section class="calendar-toolbar" id="calendar-toolbar" aria-label="Calendar controls">
-    <div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month">Month</button><button class="view-button" data-view="list">List</button></div>
+    <div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month" aria-pressed="true">Month</button><button class="view-button" data-view="list" aria-pressed="false">List</button></div>
     <label class="calendar-control">Show <select id="range-filter"><option value="month">Selected month</option><option value="all">All dates</option><option value="custom">Custom range</option></select></label>
     <label class="calendar-control calendar-type-control">Filter by type <select id="type-filter"><option value="all">All activities</option>{Object.entries(labels).map(([key, value]) => <option value={key}>{value}</option>)}</select></label>
     <div class="calendar-actions">
@@ -292,7 +292,7 @@ const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: '
     };
     const updateMonthBar = () => { monthBar.hidden = view === 'list' && range !== 'month'; };
     const updateSearchVisibility = () => { searchRow.hidden = !(view === 'list' && range === 'all'); };
-    const setView = (nextView) => { view = nextView; document.querySelectorAll('.view-button').forEach((button) => button.classList.toggle('active', button.dataset.view === view)); document.querySelector('#month-view').hidden = view !== 'month'; document.querySelector('#list-view').hidden = view !== 'list'; updateMonthBar(); updateSearchVisibility(); legend.hidden = view !== 'month'; };
+    const setView = (nextView) => { view = nextView; document.querySelectorAll('.view-button').forEach((button) => { const selected = button.dataset.view === view; button.classList.toggle('active', selected); button.setAttribute('aria-pressed', String(selected)); }); document.querySelector('#month-view').hidden = view !== 'month'; document.querySelector('#list-view').hidden = view !== 'list'; updateMonthBar(); updateSearchVisibility(); legend.hidden = view !== 'month'; };
     const revealEvent = (eventId) => {
       setView('list');
       requestAnimationFrame(() => {

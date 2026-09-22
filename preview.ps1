@@ -13,7 +13,12 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
 if (-not (Test-Path 'node_modules')) {
   Write-Host 'Installing website dependencies...'
   npm install
+  if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
+
+Write-Host 'Building the website and refreshing dist/calendar.ics...' -ForegroundColor Cyan
+npm run build
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "Preview: http://localhost:$Port/miaogroup/" -ForegroundColor Cyan
 Write-Host 'Press Ctrl+C to stop the preview server.'
