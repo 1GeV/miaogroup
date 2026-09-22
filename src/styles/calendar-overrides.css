@@ -1,4 +1,5 @@
 .event-row { grid-template-columns:100px minmax(0, 1fr); }
+.event-row time span.event-row-date-context { color:var(--blue); font-size:13px; font-weight:600; white-space:nowrap; }
 .event-row::after { content:none; }
 .event-row-link { grid-template-columns:100px minmax(0, 1fr) 30px; cursor:pointer; }
 .event-row-link:hover { background:var(--pale); }

@@ -1,13 +1,43 @@
-.series-overview { max-width:690px; margin:-12px 0 38px; padding:18px 0 0; border-top:1px solid var(--line); }
+.series-disclosure,
+.seminar-term { min-width:0; }
+.series-summary,
+.term-summary { display:flex; align-items:center; justify-content:space-between; gap:28px; cursor:pointer; list-style:none; }
+.series-summary::-webkit-details-marker,
+.term-summary::-webkit-details-marker { display:none; }
+.summary-heading { min-width:0; }
+.series-summary .eyebrow,
+.term-summary .eyebrow { display:block; }
+.series-summary { padding:0 0 34px; }
+.series-summary .eyebrow { margin:0 0 12px; }
+.series-title { display:block; font-size:clamp(30px,4vw,50px); font-weight:500; line-height:1.1; }
+.term-summary { padding:20px 0; }
+.term-summary .term-status { margin:0 0 5px; }
+.term-title { display:block; font-size:19px; font-weight:650; line-height:1.1; }
+.disclosure-indicator { display:grid; flex:0 0 28px; width:28px; height:28px; place-items:center; color:var(--teal); }
+.disclosure-indicator::before { width:8px; height:8px; border-right:1px solid currentColor; border-bottom:1px solid currentColor; content:''; transform:rotate(45deg) translate(-2px, -2px); transition:transform .16s ease; }
+details[open] > summary .disclosure-indicator::before { transform:rotate(225deg) translate(-2px, -2px); }
+.series-summary:hover .series-title,
+.term-summary:hover .term-title { color:var(--blue); }
+.series-summary:focus-visible,
+.term-summary:focus-visible { outline:2px solid var(--teal); outline-offset:4px; }
+.series-overview { max-width:690px; margin:-12px 0 22px; padding:18px 0 0; border-top:1px solid var(--line); }
 .series-overview > p:first-child { margin-bottom:8px; color:var(--muted); }
 .series-contact { margin:0; color:var(--ink); font-size:13px; }
 .series-contact a { color:var(--teal); }
 .series-contact a:hover { color:var(--blue); }
 .series-links .reference-label { color:var(--muted); font-size:12px; font-weight:700; }
 .series-links { margin-top:14px; }
+.seminar-term { border-top:1px solid var(--line); }
+.seminar-term .seminar-list { border-top:0; }
 .seminar-card { scroll-margin-top:24px; transition:background-color .2s ease, box-shadow .2s ease; }
 .seminar-card-highlight { background:var(--pale); }
 
 @media (max-width:760px) {
-  .series-overview { margin-bottom:30px; }
+  .series-summary { gap:18px; padding-bottom:28px; }
+  .series-overview { margin-bottom:14px; }
+  .term-summary { gap:18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclosure-indicator::before { transition:none; }
 }

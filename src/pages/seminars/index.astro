@@ -19,20 +19,22 @@ const seriesGroups = seriesNames.map((series) => {
   const settings = seriesSettings.find((setting) => matchingSeries(setting.data.series, series))?.data;
   const termSetting = (semester: string) => termSettings.find((term) => term.data.semester === semester && matchingSeries(term.data.series, series));
   const displaySeries = termSettings.find((term) => matchingSeries(term.data.series, series))?.data.series ?? settings?.series ?? series;
+  const terms = semesters.map((semester) => {
+    const termRecords = seriesRecords.filter((record) => record.data.semester === semester);
+    const termSchedules = termRecords.map((record) => scheduleFor(record.data));
+    const configuredArchiveDate = termSetting(semester)?.data.archiveAfter;
+    const archiveAfter = configuredArchiveDate ?? new Date(Math.max(...termSchedules.map((schedule) => (schedule.end ?? schedule.start).valueOf())));
+    const firstTalkDate = new Date(Math.min(...termSchedules.map((schedule) => schedule.start.valueOf())));
+    const status = archiveAfter < now ? 'Archive' : firstTalkDate > now ? 'Upcoming term' : 'Current term';
+    return { semester, records: termRecords, archiveAfter, firstTalkDate, status };
+  });
   return {
     series: displaySeries,
     description: settings?.description,
     contact: settings?.contact,
     links: settings?.links ?? [],
-    terms: semesters.map((semester) => {
-      const termRecords = seriesRecords.filter((record) => record.data.semester === semester);
-      const termSchedules = termRecords.map((record) => scheduleFor(record.data));
-      const configuredArchiveDate = termSetting(semester)?.data.archiveAfter;
-      const archiveAfter = configuredArchiveDate ?? new Date(Math.max(...termSchedules.map((schedule) => (schedule.end ?? schedule.start).valueOf())));
-      const firstTalkDate = new Date(Math.min(...termSchedules.map((schedule) => schedule.start.valueOf())));
-      const status = archiveAfter < now ? 'Archive' : firstTalkDate > now ? 'Upcoming term' : 'Current term';
-      return { semester, records: termRecords, archiveAfter, firstTalkDate, status };
-    })
+    terms,
+    isActive: terms.some(({ status }) => status !== 'Archive')
   };
 });
 
@@ -52,52 +54,58 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
     <p>Talks and reading conversations across modern high-energy theory.</p>
   </section>
 
-  {seriesGroups.length ? seriesGroups.map(({ series, description, contact, links, terms }) => (
+  {seriesGroups.length ? seriesGroups.map(({ series, description, contact, links, terms, isActive }) => (
     <section class="semester-section" id={seriesAnchor(series)}>
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Seminar</p>
-          <h2 set:html={renderMath(series)}></h2>
+      <details class="series-disclosure" open={isActive}>
+        <summary class="series-summary">
+          <span class="summary-heading">
+            <span class="eyebrow">Seminar</span>
+            <span class="series-title" role="heading" aria-level="2" set:html={renderMath(series)}></span>
+          </span>
+          <span class="disclosure-indicator" aria-hidden="true"></span>
+        </summary>
+        <div class="series-content">
+          {(description || contact || links.length) && <div class="series-overview">
+            {description && <p set:html={renderMath(description)}></p>}
+            {contact && <p class="series-contact" set:html={renderContact(contact)}></p>}
+            {links.length > 0 && <div class="card-links series-links">
+              {links.map((link) => link.url ? <a href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a> : <span class="reference-label">{link.label}</span>)}
+            </div>}
+          </div>}
+          {terms.map(({ semester, records: termRecords, archiveAfter, firstTalkDate, status }) => (
+            <details class="seminar-term" open={status !== 'Archive'}>
+              <summary class="term-summary">
+                <span class="summary-heading">
+                  <span class="eyebrow term-status" data-archive-after={archiveAfter.toISOString()} data-first-talk={firstTalkDate.toISOString()}>{status}</span>
+                  <span class="term-title" role="heading" aria-level="3" set:html={renderMath(semester)}></span>
+                </span>
+                <span class="disclosure-indicator" aria-hidden="true"></span>
+              </summary>
+              <div class="seminar-list">
+                {termRecords.map((record) => (
+                  <article class="seminar-card" id={`talk-${record.id}`}>
+                    <div class="seminar-card-date">{formatDate(record.data.date)}</div>
+                    <div>
+                      <p class="event-type" set:html={renderSpeaker(record.data.speaker)}></p>
+                      <h3 set:html={renderMath(record.data.title)}></h3>
+                      {record.data.time && <p class="muted">Time: {record.data.time}</p>}
+                      {record.data.location && <p class="muted">Location: {record.data.location}</p>}
+                      {renderOnlineMeetings(record.data.onlineMeeting) && <p class="muted meeting-line">Online meeting: <Fragment set:html={renderOnlineMeetings(record.data.onlineMeeting)} /></p>}
+                      {record.data.contact && <p class="muted activity-contact" set:html={renderContact(record.data.contact)}></p>}
+                      {record.data.description && <p class="muted" set:html={renderMath(record.data.description)}></p>}
+                      {record.data.paper && <p class="muted" set:html={renderMath(`Reading: ${record.data.paper}`)}></p>}
+                      <div class="card-links">
+                        {record.data.references.map((reference) => reference.url ? <a href={reference.url} target="_blank" rel="noreferrer" set:html={`${renderMath(reference.label)} ↗`}></a> : <span class="reference-label" set:html={renderMath(reference.label)}></span>)}
+                        {record.data.recordingUrl && <a href={record.data.recordingUrl} target="_blank" rel="noreferrer">Recording ↗</a>}
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </details>
+          ))}
         </div>
-      </div>
-      {(description || contact || links.length) && <div class="series-overview">
-        {description && <p set:html={renderMath(description)}></p>}
-        {contact && <p class="series-contact" set:html={renderContact(contact)}></p>}
-        {links.length > 0 && <div class="card-links series-links">
-          {links.map((link) => link.url ? <a href={link.url} target="_blank" rel="noreferrer">{link.label} ↗</a> : <span class="reference-label">{link.label}</span>)}
-        </div>}
-      </div>}
-      {terms.map(({ semester, records: termRecords, archiveAfter, firstTalkDate, status }) => (
-        <div class="seminar-term">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow term-status" data-archive-after={archiveAfter.toISOString()} data-first-talk={firstTalkDate.toISOString()}>{status}</p>
-              <h3 set:html={renderMath(semester)}></h3>
-            </div>
-          </div>
-          <div class="seminar-list">
-            {termRecords.map((record) => (
-              <article class="seminar-card" id={`talk-${record.id}`}>
-                <div class="seminar-card-date">{formatDate(record.data.date)}</div>
-                <div>
-                  <p class="event-type" set:html={renderSpeaker(record.data.speaker)}></p>
-                  <h3 set:html={renderMath(record.data.title)}></h3>
-                  {record.data.time && <p class="muted">Time: {record.data.time}</p>}
-                  {record.data.location && <p class="muted">Location: {record.data.location}</p>}
-                  {renderOnlineMeetings(record.data.onlineMeeting) && <p class="muted meeting-line">Online meeting: <Fragment set:html={renderOnlineMeetings(record.data.onlineMeeting)} /></p>}
-                  {record.data.contact && <p class="muted activity-contact" set:html={renderContact(record.data.contact)}></p>}
-                  {record.data.description && <p class="muted" set:html={renderMath(record.data.description)}></p>}
-                  {record.data.paper && <p class="muted" set:html={renderMath(`Reading: ${record.data.paper}`)}></p>}
-                  <div class="card-links">
-                    {record.data.references.map((reference) => reference.url ? <a href={reference.url} target="_blank" rel="noreferrer" set:html={`${renderMath(reference.label)} ↗`}></a> : <span class="reference-label" set:html={renderMath(reference.label)}></span>)}
-                    {record.data.recordingUrl && <a href={record.data.recordingUrl} target="_blank" rel="noreferrer">Recording ↗</a>}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      ))}
+      </details>
     </section>
   )) : <div class="archive-empty"><span class="empty-index">01</span><h2>No talks scheduled.</h2></div>}
   <script>
@@ -106,17 +114,30 @@ const seriesAnchor = (series: string) => `series-${series.toLowerCase().replace(
       const firstTalkDate = status.getAttribute('data-first-talk');
       if (archiveAfter && firstTalkDate) {
         const now = new Date();
-        status.textContent = new Date(archiveAfter) < now ? 'Archive' : new Date(firstTalkDate) > now ? 'Upcoming term' : 'Current term';
+        const isArchived = new Date(archiveAfter) < now;
+        status.textContent = isArchived ? 'Archive' : new Date(firstTalkDate) > now ? 'Upcoming term' : 'Current term';
+        const term = status.closest('.seminar-term');
+        if (term) term.open = !isArchived;
       }
+    });
+    document.querySelectorAll('.series-disclosure').forEach((series) => {
+      series.open = [...series.querySelectorAll('.term-status')].some((status) => status.textContent !== 'Archive');
     });
     const revealTalkFromHash = () => {
       const id = decodeURIComponent(window.location.hash.slice(1));
       const target = document.getElementById(id);
-      if (!target?.classList.contains('seminar-card')) return;
+      if (!target) return;
+      const series = target.classList.contains('semester-section') ? target.querySelector('.series-disclosure') : target.closest('.series-disclosure');
+      if (series) series.open = true;
+      const term = target.closest('.seminar-term');
+      if (term) term.open = true;
+      if (!target.classList.contains('seminar-card') && !target.classList.contains('semester-section')) return;
       requestAnimationFrame(() => {
-        target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        target.classList.add('seminar-card-highlight');
-        window.setTimeout(() => target.classList.remove('seminar-card-highlight'), 1600);
+        target.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        if (target.classList.contains('seminar-card')) {
+          target.classList.add('seminar-card-highlight');
+          window.setTimeout(() => target.classList.remove('seminar-card-highlight'), 1600);
+        }
       });
     };
     revealTalkFromHash();
