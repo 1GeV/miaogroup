@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2480" height="3508" viewBox="0 0 2480 3508" role="img" aria-labelledby="title description">
+  <title id="title">Miao Group website poster</title>
+  <desc id="description">Miao Group, School of Physics and Astronomy, Sun Yat-sen University. Four boundary-to-bulk curves and a homepage QR code.</desc>
+  <rect width="2480" height="3508" fill="#ffffff"/>
+
+  <!-- Editable typography; the source poster and seminar illustration are preserved separately. -->
+  <g id="heading" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif">
+    <text id="group-name" x="1240" y="550" fill="#06265f" font-size="340">Miao Group</text>
+    <g fill="#536d88" font-size="104">
+      <text id="school" x="1240" y="790">School of Physics and Astronomy</text>
+      <text id="university" x="1240" y="935">Sun Yat-sen University</text>
+    </g>
+    <text id="topics" x="1240" y="1130" fill="#124480" font-size="96">Holography · Strings · Quantum Gravity</text>
+  </g>
+
+  <!-- Uniformly scaled homepage geometry: four paths, each through one intermediate node. -->
+  <g id="diagram" transform="translate(96 1310) scale(4.4)">
+    <text x="42" y="25" fill="#536d88" font-family="Georgia, 'Times New Roman', serif" font-size="15">boundary</text>
+    <g fill="none" stroke="#537faa" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="42" y1="42" x2="478" y2="42"/>
+      <path d="M90 42 C108 76 136 113 164 141 C192 169 226 209 260 245"/>
+      <path d="M200 42 C216 79 231 116 241 150 C249 178 255 213 260 245"/>
+      <path d="M320 42 C304 79 289 116 279 150 C271 178 265 213 260 245"/>
+      <path d="M430 42 C412 76 384 113 356 141 C328 169 294 209 260 245"/>
+    </g>
+    <g fill="#ffffff" stroke="#124480" stroke-width="1.65">
+      <circle cx="90" cy="42" r="6.7"/><circle cx="200" cy="42" r="6.7"/>
+      <circle cx="320" cy="42" r="6.7"/><circle cx="430" cy="42" r="6.7"/>
+      <circle cx="164" cy="141" r="6.7"/><circle cx="241" cy="150" r="6.7"/>
+      <circle cx="279" cy="150" r="6.7"/><circle cx="356" cy="141" r="6.7"/>
+    </g>
+    <circle cx="260" cy="245" r="36" fill="#06265f"/>
+    <text x="260" y="250.5" fill="#ffffff" font-family="Georgia, 'Times New Roman', serif" font-size="20" text-anchor="middle">bulk</text>
+  </g>
+
+  <g id="website-info" font-family="Georgia, 'Times New Roman', serif">
+    <text id="website-heading" x="220" y="2825" fill="#124480" font-size="120" font-weight="700">Group website</text>
+    <text id="website-summary" x="220" y="2978" fill="#607a94" font-size="76">Academic calendar · Seminar archive</text>
+    <text id="website-url" x="220" y="3145" fill="#124480" font-size="80">1gev.github.io/miaogroup/</text>
+  </g>
+
+  <!-- Exact 29×29 module pattern sampled from website-qr-code.png.
+       Four white modules on every side; integer 17 px modules; no external image dependency. -->
+  <g id="homepage-qr" transform="translate(1654 2630)" aria-label="QR code for https://1gev.github.io/miaogroup/">
+    <rect width="629" height="629" fill="#ffffff"/>
+    <path fill="#000000" shape-rendering="crispEdges" d="M68 68h119v17h-119zM204 68h34v17h-34zM255 68h85v17h-85zM374 68h17v17h-17zM408 68h17v17h-17zM442 68h119v17h-119zM68 85h17v17h-17zM170 85h17v17h-17zM204 85h34v17h-34zM289 85h51v17h-51zM357 85h17v17h-17zM391 85h17v17h-17zM442 85h17v17h-17zM544 85h17v17h-17zM68 102h17v17h-17zM102 102h51v17h-51zM170 102h17v17h-17zM204 102h51v17h-51zM289 102h34v17h-34zM408 102h17v17h-17zM442 102h17v17h-17zM476 102h51v17h-51zM544 102h17v17h-17zM68 119h17v17h-17zM102 119h51v17h-51zM170 119h17v17h-17zM272 119h17v17h-17zM306 119h34v17h-34zM357 119h17v17h-17zM391 119h34v17h-34zM442 119h17v17h-17zM476 119h51v17h-51zM544 119h17v17h-17zM68 136h17v17h-17zM102 136h51v17h-51zM170 136h17v17h-17zM204 136h34v17h-34zM255 136h51v17h-51zM323 136h17v17h-17zM374 136h34v17h-34zM442 136h17v17h-17zM476 136h51v17h-51zM544 136h17v17h-17zM68 153h17v17h-17zM170 153h17v17h-17zM221 153h102v17h-102zM357 153h17v17h-17zM408 153h17v17h-17zM442 153h17v17h-17zM544 153h17v17h-17zM68 170h119v17h-119zM204 170h17v17h-17zM238 170h17v17h-17zM272 170h17v17h-17zM306 170h17v17h-17zM340 170h17v17h-17zM374 170h17v17h-17zM408 170h17v17h-17zM442 170h119v17h-119zM238 187h17v17h-17zM272 187h17v17h-17zM306 187h17v17h-17zM391 187h34v17h-34zM68 204h17v17h-17zM119 204h102v17h-102zM238 204h17v17h-17zM289 204h85v17h-85zM425 204h17v17h-17zM476 204h17v17h-17zM510 204h51v17h-51zM85 221h17v17h-17zM153 221h17v17h-17zM187 221h102v17h-102zM306 221h17v17h-17zM357 221h51v17h-51zM476 221h17v17h-17zM510 221h34v17h-34zM68 238h34v17h-34zM170 238h17v17h-17zM204 238h17v17h-17zM255 238h34v17h-34zM306 238h17v17h-17zM357 238h34v17h-34zM408 238h17v17h-17zM442 238h34v17h-34zM510 238h17v17h-17zM68 255h34v17h-34zM136 255h17v17h-17zM204 255h34v17h-34zM306 255h34v17h-34zM357 255h17v17h-17zM391 255h34v17h-34zM476 255h34v17h-34zM544 255h17v17h-17zM68 272h17v17h-17zM119 272h68v17h-68zM204 272h51v17h-51zM289 272h34v17h-34zM340 272h17v17h-17zM408 272h17v17h-17zM442 272h17v17h-17zM544 272h17v17h-17zM68 289h17v17h-17zM119 289h34v17h-34zM187 289h68v17h-68zM374 289h17v17h-17zM408 289h17v17h-17zM442 289h119v17h-119zM170 306h17v17h-17zM204 306h17v17h-17zM238 306h17v17h-17zM272 306h17v17h-17zM306 306h34v17h-34zM374 306h34v17h-34zM442 306h51v17h-51zM510 306h17v17h-17zM544 306h17v17h-17zM85 323h51v17h-51zM255 323h17v17h-17zM289 323h51v17h-51zM391 323h51v17h-51zM459 323h34v17h-34zM510 323h17v17h-17zM544 323h17v17h-17zM68 340h17v17h-17zM119 340h34v17h-34zM170 340h17v17h-17zM221 340h68v17h-68zM408 340h17v17h-17zM459 340h17v17h-17zM493 340h17v17h-17zM68 357h17v17h-17zM119 357h34v17h-34zM187 357h17v17h-17zM221 357h17v17h-17zM323 357h34v17h-34zM374 357h51v17h-51zM476 357h17v17h-17zM510 357h34v17h-34zM68 374h34v17h-34zM170 374h17v17h-17zM204 374h34v17h-34zM255 374h17v17h-17zM289 374h68v17h-68zM391 374h17v17h-17zM425 374h17v17h-17zM493 374h17v17h-17zM544 374h17v17h-17zM68 391h34v17h-34zM119 391h34v17h-34zM187 391h34v17h-34zM238 391h34v17h-34zM289 391h17v17h-17zM391 391h17v17h-17zM425 391h17v17h-17zM459 391h68v17h-68zM68 408h34v17h-34zM119 408h17v17h-17zM153 408h51v17h-51zM221 408h17v17h-17zM255 408h51v17h-51zM323 408h17v17h-17zM357 408h17v17h-17zM391 408h153v17h-153zM204 425h34v17h-34zM272 425h34v17h-34zM323 425h17v17h-17zM374 425h51v17h-51zM476 425h34v17h-34zM68 442h119v17h-119zM204 442h34v17h-34zM272 442h34v17h-34zM323 442h34v17h-34zM391 442h34v17h-34zM442 442h17v17h-17zM476 442h34v17h-34zM68 459h17v17h-17zM170 459h17v17h-17zM204 459h17v17h-17zM238 459h34v17h-34zM289 459h17v17h-17zM357 459h17v17h-17zM391 459h34v17h-34zM476 459h17v17h-17zM527 459h34v17h-34zM68 476h17v17h-17zM102 476h51v17h-51zM170 476h17v17h-17zM204 476h51v17h-51zM289 476h17v17h-17zM323 476h17v17h-17zM391 476h119v17h-119zM527 476h34v17h-34zM68 493h17v17h-17zM102 493h51v17h-51zM170 493h17v17h-17zM204 493h17v17h-17zM238 493h17v17h-17zM289 493h68v17h-68zM391 493h51v17h-51zM544 493h17v17h-17zM68 510h17v17h-17zM102 510h51v17h-51zM170 510h17v17h-17zM221 510h119v17h-119zM357 510h68v17h-68zM459 510h34v17h-34zM510 510h51v17h-51zM68 527h17v17h-17zM170 527h17v17h-17zM221 527h17v17h-17zM255 527h17v17h-17zM323 527h17v17h-17zM374 527h17v17h-17zM425 527h68v17h-68zM510 527h17v17h-17zM544 527h17v17h-17zM68 544h119v17h-119zM204 544h68v17h-68zM289 544h34v17h-34zM391 544h51v17h-51zM459 544h51v17h-51z"/>
+  </g>
+</svg>
+
