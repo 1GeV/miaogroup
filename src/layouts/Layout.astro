@@ -43,7 +43,12 @@ const socialImageUrl = new URL(`${import.meta.env.BASE_URL}${socialImage}`, Astr
     <div class="site-shell">
       <header class="site-header">
         <a class="wordmark" href={import.meta.env.BASE_URL} aria-label="Miao Group home">
-          <span class="wordmark-mark" aria-hidden="true">∿</span>
+          <svg class="wordmark-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+            <path class="wordmark-boundary" d="M4 6h24" />
+            <circle cx="8" cy="6" r="1.7" /><circle cx="16" cy="6" r="1.7" /><circle cx="24" cy="6" r="1.7" />
+            <path class="wordmark-path" d="M8 8C9 14 12 20 16 25M16 8v17M24 8C23 14 20 20 16 25" />
+            <circle class="wordmark-bulk" cx="16" cy="25" r="3.8" />
+          </svg>
           <span>Miao Group</span>
         </a>
         <nav aria-label="Main navigation">
