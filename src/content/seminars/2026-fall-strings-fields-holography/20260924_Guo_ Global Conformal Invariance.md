@@ -1,9 +1,9 @@
 ---
 series: 'Strings, Fields and Holography Seminar'
 semester: "Fall 2026"
-date: 2026-09-24
-time: "19:30-21:00"
-location: "Room B331, Hanlin Building 3"
+date: 2026-09-28
+time: "to be determined"
+location: "to be determined"
 speaker:
   name: "Yu Guo"
   url: "https://orcid.org/0009-0003-9249-7076"
