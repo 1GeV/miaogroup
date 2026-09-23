@@ -48,7 +48,7 @@ const serialized = events.map((data) => ({ ...data, date: data.date.toISOString(
 const labels = { 'group-meeting': 'Group meeting', seminar: 'Seminar', lecture: 'Lecture', defense: 'Thesis defense', other: 'Other' };
 const formatDate = (date: Date) => new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Shanghai' }).format(date);
 ---
-<Layout title="Academic calendar" description="Academic calendar for Miao Group meetings, lectures, seminars, defenses, and other public activities at Sun Yat-sen University.">
+<Layout title="Academic calendar" description="Academic calendar for Miao Group meetings, lectures, seminars, defenses, and other public activities at Sun Yat-sen University." socialImage="social-preview-calendar.png">
   <section class="page-intro"><p class="eyebrow">Plan the week</p><h1>Academic calendar</h1><p>Group meetings, lectures, seminars, defenses, and other shared moments.</p></section>
   <section class="calendar-toolbar" id="calendar-toolbar" aria-label="Calendar controls">
     <div class="view-switcher" role="group" aria-label="Calendar view"><button class="view-button active" data-view="month" aria-pressed="true">Month</button><button class="view-button" data-view="list" aria-pressed="false">List</button></div>
