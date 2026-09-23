@@ -3,6 +3,7 @@ series: 'Strings, Fields and Holography Seminar'
 semester: "Fall 2026"
 date: 2026-09-18T16:00:00+08:00
 time: "15:00-17:00"
+location: "Room to be announced"
 speaker: 
   name: "Example Speaker"
   url: "https://orcid.org/0000-0003-1032-2313"
