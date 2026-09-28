@@ -20,7 +20,9 @@ description: 'This lecture introduces the global conformal group and its generat
 references:
   - label: '$\textit{Conformal Field Theory}$'
     url: "https://doi.org/10.1007/978-1-4612-2256-9"
-  - label: '$\textit{Lectures on Conformal Field Theory}$'
+  - label: 'arXiv:1511.04074'
     url: "https://arxiv.org/abs/1511.04074v2"
+  - label: 'Slides'
+    url: "https://github.com/1GeV/miaogroup/releases/download/20260928/Global.Conformal.Invariance.pdf"
 draft: false
 ---
