@@ -95,8 +95,14 @@ const typeLabel = (type: string) => type.replace('-', ' ');
 
   <section class="seminar-banner section-grid">
     <div><p class="eyebrow">A recurring conversation</p><h2>{homepageSeriesHeading ? <><span set:html={renderMath(homepageSeriesHeading.lead)}></span><br /><em set:html={renderMath(homepageSeriesHeading.accent)}></em><br /><span set:html={renderMath(homepageSeriesHeading.suffix)}></span></> : <span set:html={renderMath(homepageSeriesName)}></span>}</h2></div>
-    <div class="seminar-summary">{featuredSeminar ? <><p class="event-type">{featuredSeminarLabel}</p><h3 set:html={renderMath(featuredSeminar.entry.data.title)}></h3><p class="muted"><span set:html={renderSpeaker(featuredSeminar.entry.data.speaker)} /> · {formatDate(featuredSeminar.entry.data.date)}{featuredSeminar.entry.data.time && <> · {featuredSeminar.entry.data.time}</>}</p></> : <><p class="event-type">Seminar series</p><h3>Talks to be announced.</h3></>}<a class="button button-light" href={featuredSeminarHref}>{featuredSeminar ? 'View seminar' : 'Explore seminars'} <span aria-hidden="true">↗</span></a></div>
+    <div class="seminar-summary" data-seminar-banner>{featuredSeminar ? <><p class="event-type">{featuredSeminarLabel}</p><h3 set:html={renderMath(featuredSeminar.entry.data.title)}></h3><p class="muted"><span set:html={renderSpeaker(featuredSeminar.entry.data.speaker)} /> · {formatDate(featuredSeminar.entry.data.date)}{featuredSeminar.entry.data.time && <> · {featuredSeminar.entry.data.time}</>}</p></> : <><p class="event-type">Seminar series</p><h3>Talks to be announced.</h3></>}<a class="button button-light" href={featuredSeminarHref}>{featuredSeminar ? 'View seminar' : 'Explore seminars'} <span aria-hidden="true">↗</span></a></div>
   </section>
+  {seminarSchedules.map(({ entry, schedule }) => <template data-banner-start={schedule.start.toISOString()} data-banner-end={schedule.end?.toISOString() || ''}>
+    <p class="event-type" data-banner-label></p>
+    <h3 set:html={renderMath(entry.data.title)}></h3>
+    <p class="muted"><span set:html={renderSpeaker(entry.data.speaker)} /> · {formatDate(entry.data.date)}{entry.data.time && <> · {entry.data.time}</>}</p>
+    <a class="button button-light" href={`${base}seminars/#talk-${entry.id}`}>View seminar <span aria-hidden="true">↗</span></a>
+  </template>)}
   <script>
     document.querySelectorAll('.event-row-link[data-href]').forEach((row) => {
       const go = () => { window.location.href = row.dataset.href; };
@@ -142,6 +148,33 @@ const typeLabel = (type: string) => type.replace('-', ' ');
     };
     updateCountdown();
     window.setInterval(updateCountdown, 30000);
+
+    // Static builds retain every talk so the banner can follow the visitor's clock.
+    const seminarBanner = document.querySelector<HTMLElement>('[data-seminar-banner]');
+    const seminarTemplates = [...document.querySelectorAll<HTMLTemplateElement>('template[data-banner-start]')];
+    let activeSeminar: HTMLTemplateElement | undefined;
+    let activeSeminarLabel = '';
+    const refreshSeminarBanner = () => {
+      const now = Date.now();
+      const current = seminarTemplates.find((item) => Date.parse(item.dataset.bannerStart!) <= now && Date.parse(item.dataset.bannerEnd!) > now);
+      const next = seminarTemplates.find((item) => Date.parse(item.dataset.bannerStart!) > now);
+      const latest = [...seminarTemplates].reverse().find((item) => Date.parse(item.dataset.bannerStart!) <= now);
+      const selected = current ?? next ?? latest;
+      const label = current ? 'Current seminar' : next ? 'Next seminar' : 'Latest seminar';
+      if (!seminarBanner || !selected || (selected === activeSeminar && label === activeSeminarLabel)) return;
+
+      const mathJax = (window as Window & { MathJax?: { typesetClear?: (elements: Element[]) => void; typesetPromise?: (elements: Element[]) => Promise<void> } }).MathJax;
+      mathJax?.typesetClear?.([seminarBanner]);
+      seminarBanner.replaceChildren(selected.content.cloneNode(true));
+      seminarBanner.querySelector('[data-banner-label]')!.textContent = label;
+      activeSeminar = selected;
+      activeSeminarLabel = label;
+      mathJax?.typesetPromise?.([seminarBanner]).catch(() => {});
+    };
+    refreshSeminarBanner();
+    window.setInterval(refreshSeminarBanner, 30000);
+    window.addEventListener('pageshow', refreshSeminarBanner);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshSeminarBanner(); });
   </script>
 </Layout>
 
