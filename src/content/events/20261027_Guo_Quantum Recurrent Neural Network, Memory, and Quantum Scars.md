@@ -1,5 +1,5 @@
 ---
-title: 'Quantum Recurrent Neural Network, Memory, and Quantum Scars'
+title: 'Quantum Recurrent Neural Networks, Memory, and Quantum Scars'
 type: group-meeting
 date: 2026-10-27
 # endDate: 2026-08-22T17:00:00+08:00
