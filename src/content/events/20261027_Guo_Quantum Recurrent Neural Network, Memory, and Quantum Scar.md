@@ -14,5 +14,7 @@ public: true
 references:
   - label: "arXiv:2111.10956"
     url: "https://arxiv.org/abs/2111.10956"
+  - label: "Slides"
+    url: "https://github.com/1GeV/miaogroup/releases/download/20261027/PPT_qRNN.and.memory.pdf"
 draft: false
 ---
