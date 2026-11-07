@@ -11,9 +11,9 @@ speaker: "Yu Guo"
 public: true
 # description:
 references:
-  - label: "Neural networks and physical systems with emergent collective computational abilities"
+  - label: "Hopfield, PNAS (1982)"
     url: "https://doi.org/10.1073/pnas.79.8.2554"
-  - label: "Emergence of diffusion models from associative memory through memorization and generalization"
+  - label: "Pham et al., Nat. Commun. (2026)"
     url: "https://doi.org/10.1038/s41467-026-78727-y"
 draft: false
 ---
