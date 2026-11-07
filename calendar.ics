@@ -18,18 +18,17 @@ END:VTIMEZONE
 BEGIN:VEVENT
 UID:20261110_guo_emergent-collective-abilities-of-memorization-and-generali
  zation-in-hopfield-networks-and-diffusion-models@miaogroup
-DTSTAMP:20261107T145543Z
+DTSTAMP:20261107T150052Z
 DTSTART;TZID=Asia/Shanghai:20261110T193000
 DTEND;TZID=Asia/Shanghai:20261110T210000
 SUMMARY:Emergent Collective Abilities of Memorization and Generalization in
   Hopfield Networks and Diffusion Models
-DESCRIPTION:Speaker: Yu Guo\n\nReferences:\nNeural networks and physical sy
- stems with emergent collective computational abilities: https://doi.org/10
- .1073/pnas.79.8.2554\nEmergence of diffusion models from associative memor
- y through memorization and generalization: https://doi.org/10.1038/s41467-
- 026-78727-y\n\nEvent details: https://1gev.github.io/miaogroup/calendar/?e
- vent=20261110_guo_emergent-collective-abilities-of-memorization-and-genera
- lization-in-hopfield-networks-and-diffusion-models
+DESCRIPTION:Speaker: Yu Guo\n\nReferences:\nHopfield\, PNAS (1982): https:/
+ /doi.org/10.1073/pnas.79.8.2554\nPham et al.\, Nat. Commun. (2026): https:
+ //doi.org/10.1038/s41467-026-78727-y\n\nEvent details: https://1gev.github
+ .io/miaogroup/calendar/?event=20261110_guo_emergent-collective-abilities-o
+ f-memorization-and-generalization-in-hopfield-networks-and-diffusion-model
+ s
 LOCATION:Room B201\, Hanlin Building 3\, Sun Yat-sen University (Zhuhai Cam
  pus)\, No. 2 Daxue Road\, Tangjiawan\, Xiangzhou District\, Zhuhai\, Guang
  dong\, China
