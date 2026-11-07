@@ -4,7 +4,7 @@ Static Astro website deployed free through GitHub Pages.
 
 ## Update content
 
-Create one Markdown file for each calendar activity in `src/content/events/`, or one file for each seminar talk in `src/content/seminars/`. Set `draft: true` while preparing a record. Drafts are not published. Commit changes to publish them through GitHub Actions.
+Create one Markdown file for each calendar activity in `src/content/events/`, or one file for each seminar talk in `src/content/seminars/`. Set `draft: true` while preparing a record. Drafts are not published. GitHub Actions normally publishes committed changes automatically. During a billing lock, the maintainer publishes with the local emergency switch; see [发布应急开关](PUBLISHING.md).
 
 ### Calendar activity
 
@@ -116,6 +116,8 @@ npm run dev
 Open the local address printed in the terminal. Stop the preview with `Ctrl+C`.
 
 ## Publish changes
+
+See [发布应急开关](PUBLISHING.md) for the `publishing.json` switch and GitHub version backups. In local emergency mode, run `npm run publish` (or double-click `publish.cmd` on Windows) after source changes have been saved and committed. This builds the original Astro site locally and publishes it through the `gh-pages` branch at the same website address.
 
 ```powershell
 git add .

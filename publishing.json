@@ -1,0 +1,8 @@
+{
+  "mode": "local",
+  "repository": "1GeV/miaogroup",
+  "sourceBranch": "main",
+  "publishBranch": "gh-pages",
+  "site": "https://1gev.github.io",
+  "base": "/miaogroup/"
+}

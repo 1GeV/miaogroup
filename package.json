@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "publish": "node scripts/publish.mjs",
+    "publish:check": "node scripts/publish.mjs --check",
+    "test:publishing": "node --test scripts/publish.test.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.0",

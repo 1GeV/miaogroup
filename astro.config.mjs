@@ -1,9 +1,12 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import { readFileSync } from 'node:fs';
+
+const publishing = JSON.parse(readFileSync(new URL('./publishing.json', import.meta.url), 'utf8'));
 
 export default defineConfig({
-  site: 'https://1gev.github.io',
-  base: '/miaogroup/',
+  site: publishing.site,
+  base: process.env.PUBLISH_BASE ?? publishing.base,
   integrations: [sitemap()],
   markdown: { shikiConfig: { theme: 'github-light' } }
 });
