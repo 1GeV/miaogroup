@@ -4,7 +4,7 @@ Static Astro website deployed free through GitHub Pages.
 
 ## Update content
 
-Create one Markdown file for each calendar activity in `src/content/events/`, or one file for each seminar talk in `src/content/seminars/`. Set `draft: true` while preparing a record. Drafts are not published. GitHub Actions normally publishes committed changes automatically. During a billing lock, the maintainer publishes with the local emergency switch; see [发布应急开关](PUBLISHING.md).
+Create one Markdown file for each calendar activity in `src/content/events/`, or one file for each seminar talk in `src/content/seminars/`. Set `draft: true` while preparing a record. Drafts are not published. GitHub Actions normally publishes committed changes automatically. During a billing lock, the maintainer publishes with the local emergency switch; see [Publishing and emergency fallback](PUBLISHING.md).
 
 ### Calendar activity
 
@@ -38,7 +38,7 @@ Both iCal export and subscription include meeting details, speaker, description,
 
 `Export iCal` exports the activities currently visible after the selected date range, type filter, and search filter. An activity without `time` is exported as an all-day event. `time: "15:00-17:00"` exports a timed event in `Asia/Shanghai`; `time: "15:00"` exports only a start time.
 
-`Subscribe` provides [calendar.ics](https://1gev.github.io/miaogroup/calendar.ics) for your calendar app: all non-draft activities within 12 months of the build date, regardless of page filters. The feed refreshes on deployment; apps sync on their own schedules.
+`Subscribe` provides [calendar.ics](https://1gev.github.io/miaogroup/calendar.ics) for calendar applications: all non-draft activities within 12 months of the build date, regardless of page filters. The feed refreshes on deployment; applications sync on their own schedules.
 
 `speaker` accepts the original plain-text form or a linked form:
 
@@ -117,10 +117,15 @@ Open the local address printed in the terminal. Stop the preview with `Ctrl+C`.
 
 ## Publish changes
 
-See [发布应急开关](PUBLISHING.md) for the `publishing.json` switch and GitHub version backups. In local emergency mode, run `npm run publish` (or double-click `publish.cmd` on Windows) after source changes have been saved and committed. This builds the original Astro site locally and publishes it through the `gh-pages` branch at the same website address.
+Commit and push source changes, then publish using the mode saved in `publishing.json`:
 
 ```powershell
 git add .
 git commit -m "Update website"
 git push
+npm run publish
 ```
+
+On Windows, double-click `publish-local.cmd` to select the local fallback and publish, or `publish-github.cmd` to restore GitHub Actions and request a build. These shortcuts replace the `npm run publish` step; source commits remain separate. Once GitHub Actions is restored, subsequent source pushes publish automatically.
+
+See [Publishing](PUBLISHING.md) for setup, troubleshooting, time-dependent behavior, and GitHub version backups.

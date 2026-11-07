@@ -1,8 +1,9 @@
 {
-  "mode": "local",
-  "repository": "1GeV/miaogroup",
-  "sourceBranch": "main",
-  "publishBranch": "gh-pages",
-  "site": "https://1gev.github.io",
-  "base": "/miaogroup/"
+    "_modeComment":  "Options: local = build locally and publish static files to avoid the current Actions billing lock; github = build and publish with GitHub Actions.",
+    "mode":  "github",
+    "repository":  "1GeV/miaogroup",
+    "sourceBranch":  "main",
+    "publishBranch":  "gh-pages",
+    "site":  "https://1gev.github.io",
+    "base":  "/miaogroup/"
 }

@@ -2,7 +2,7 @@
 
 Create one Markdown file for every calendar activity and seminar talk. Set `draft: true` while preparing a record; drafts are not published.
 
-Use `README-UPDATED.md` for complete YAML templates. Important rules:
+See [README.md](README.md) for complete YAML templates and [PUBLISHING.md](PUBLISHING.md) for publishing instructions. Important rules:
 
 - Use `HH:MM-HH:MM` for a time range and `HH:MM` for a start time only.
 - Use single-quoted YAML values when formulas contain backslashes, for example `title: 'Action $I=S/\hbar$'`.
@@ -12,3 +12,5 @@ Use `README-UPDATED.md` for complete YAML templates. Important rules:
 - The `series` value in a `seminar-terms` file may contain a formula and becomes the displayed series heading.
 
 Check the date, timezone, speaker name, and links before committing.
+
+Public documentation, code comments, configuration notes, and maintained script messages must be in English. Use neutral project documentation and avoid second-person references to individual maintainers or private conversations.

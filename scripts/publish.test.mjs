@@ -11,7 +11,7 @@ const repo = '/repos/example/site';
 const blobSha = (bytes) => createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
 
 test('refuses publishing generated files onto the source branch', () => {
-  assert.throws(() => validateConfig({ ...config, publishBranch: 'main' }), /必须不同/);
+  assert.throws(() => validateConfig({ ...config, publishBranch: 'main' }), /must be different/);
   assert.throws(() => validateConfig({ ...config, base: '/site' }), /base/);
   assert.equal(validateConfig(config).mode, 'local');
 });
@@ -20,7 +20,7 @@ test('keeps .nojekyll, _astro assets and binary bytes intact', () => {
   const folder = mkdtempSync(join(tmpdir(), 'miaogroup-publish-test-'));
   try {
     mkdirSync(join(folder, '_astro'));
-    writeFileSync(join(folder, 'index.html'), '<h1>原版页面</h1>');
+    writeFileSync(join(folder, 'index.html'), '<h1>Original page: café</h1>');
     writeFileSync(join(folder, '.nojekyll'), '');
     const binary = Buffer.from([0, 255, 128, 10]);
     writeFileSync(join(folder, '_astro', 'asset.png'), binary);
