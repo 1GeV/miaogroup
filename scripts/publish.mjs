@@ -62,6 +62,9 @@ export function makeApi(token) {
           await pause(1000);
           continue;
         }
+        if (!error.message.startsWith('GitHub ')) {
+          throw new Error(`连接 GitHub 接口失败（${error.cause?.code || error.code || '网络中断'}）。可切换校园网/手机热点后重试；已保存的源码不会丢失。`);
+        }
         throw error;
       }
     }
@@ -257,7 +260,18 @@ async function waitForPages(api, config, publication, receipt) {
       say(`发布成功：${url}`);
       return;
     }
-    const runs = await api('GET', `${repoPath(config)}/actions/runs?branch=${encodeURIComponent(config.publishBranch)}&per_page=5`);
+    let runs;
+    try {
+      runs = await api('GET', `${repoPath(config)}/actions/runs?branch=${encodeURIComponent(config.publishBranch)}&per_page=5`);
+    } catch (error) {
+      if (!error.message.startsWith('连接 GitHub 接口失败')) throw error;
+      if (Date.now() - lastReport > 25000) {
+        say('文件已上传，暂时无法读取发布状态，继续等待网络恢复……');
+        lastReport = Date.now();
+      }
+      await pause(5000);
+      continue;
+    }
     const run = runs?.workflow_runs.find((item) => item.head_sha === publication.commit && item.name === 'pages build and deployment');
     if (run?.status === 'completed' && run.conclusion !== 'success') {
       throw new Error(`GitHub 内置 Pages 发布未成功（${run.conclusion}）：${run.html_url}。源码和已生成文件均已保留。`);
@@ -344,6 +358,14 @@ export async function main(argv = process.argv.slice(2)) {
   files = collectArtifacts(directory);
   const publication = await publishArtifacts(api, config, files, sourceCommit, say);
   writeFileSync(join(operationDir, 'last-publication.json'), `${JSON.stringify({ repository: config.repository, ...publication, ...receipt, url }, null, 2)}\n`);
+  if (publication.changedSource) {
+    try {
+      await api('POST', `${repoPath(config)}/pages/builds`);
+    } catch (error) {
+      if (!error.message.startsWith('GitHub 409:')) throw error;
+      // A push can already have queued the same built-in Pages deployment.
+    }
+  }
   await waitForPages(api, config, publication, receipt);
 }
 
