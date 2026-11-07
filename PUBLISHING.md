@@ -42,6 +42,7 @@ Once Actions publishing works, ordinary source pushes are sufficient. Running th
 
 - **Uncertain deployment result:** run `npm run publish:check` before uploading again. A failed status check does not necessarily mean publication failed. Retry network failures after connectivity returns.
 - **Source conflicts:** commit local changes and reconcile conflicts before retrying. Edit `main`, not generated HTML on `gh-pages`.
+- **Queued run cannot be cancelled:** local mode can continue past GitHub's specific pre-queue cancellation conflict only after confirming zero jobs and a disabled original workflow. Runs with actual jobs and other cancellation errors still block the switch.
 - **Pages rejects publication:** inspect its deployment error. Local mode avoids the current Actions build lock but cannot bypass every account restriction.
 
 Countdowns, the homepage seminar banner, and date comparisons retain their browser behavior. Term status and the calendar's current date are evaluated on page load; a page left open across a date boundary may need refreshing. Visitor device clocks must be accurate.

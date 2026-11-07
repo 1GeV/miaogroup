@@ -146,17 +146,32 @@ export async function publishArtifacts(api, config, files, sourceCommit, onProgr
     await api('PUT', `${repo}/actions/workflows/${workflow.id}/disable`);
   }
   if (workflow) {
-    // Disable future runs and finish cancelling existing ones before changing the source.
+    // Cancel real jobs before switching; GitHub can leave a queued run with no jobs that its cancellation API rejects.
     const runsPath = `${repo}/actions/workflows/${workflow.id}/runs?per_page=20`;
     const unfinished = (await api('GET', runsPath))?.workflow_runs.filter((run) => run.status !== 'completed') ?? [];
+    const pending = new Set();
     for (const run of unfinished) {
-      try { await api('POST', `${repo}/actions/runs/${run.id}/cancel`); }
+      const runPath = `${repo}/actions/runs/${run.id}`;
+      try {
+        await api('POST', `${runPath}/cancel`);
+        pending.add(run.id);
+      }
       catch (error) {
-        const latest = await api('GET', `${repo}/actions/runs/${run.id}`);
-        if (latest?.status !== 'completed') throw error;
+        const latest = await api('GET', runPath);
+        if (latest?.status === 'completed') continue;
+        const prequeueConflict = /^GitHub 409: Cannot cancel a workflow run that has not been queued yet\./.test(error.message);
+        if (prequeueConflict && latest?.status === 'queued') {
+          const jobs = await api('GET', `${runPath}/jobs`);
+          if (jobs?.total_count === 0 && Array.isArray(jobs.jobs) && jobs.jobs.length === 0) {
+            const disabled = await api('GET', workflowPath(config));
+            if (disabled?.state !== 'disabled_manually') throw new Error('The original workflow could not be confirmed disabled; the Pages source has not been switched.');
+            onProgress(`Queued run ${run.id} has no jobs and GitHub rejects its cancellation. The original workflow is confirmed disabled; continuing with branch publishing.`);
+            continue;
+          }
+        }
+        throw error;
       }
     }
-    const pending = new Set(unfinished.map((run) => run.id));
     for (let attempt = 0; pending.size && attempt < 12; attempt++) {
       await pause(5000);
       const latest = await api('GET', runsPath);
