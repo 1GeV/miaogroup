@@ -1,6 +1,6 @@
 {
     "_modeComment":  "Options: local = build locally and publish static files to avoid the current Actions billing lock; github = build and publish with GitHub Actions.",
-    "mode":  "local",
+    "mode":  "github",
     "repository":  "1GeV/miaogroup",
     "sourceBranch":  "main",
     "publishBranch":  "gh-pages",
